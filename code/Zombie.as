@@ -11,7 +11,7 @@ package code {
 			return currentTile;
 		}
 		
-		public function setCurrentTile(Tile tile) {
+		public function setCurrentTile(tile:Tile) {
 			currentTile = tile;
 		}
 
