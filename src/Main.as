@@ -22,6 +22,18 @@ package {
 					addChild( tile );
 				}
 			}
+			
+			// Create board
+			var b:Board = new Board();
+			
+			// Create zombies
+			for (var i:Number = 0; i < 2; i++) {
+				b.addZombie(i);
+			}
+			
+			// Check for path for Zombies
+			b.moveZombies();
+			b.moveZombies();
 		}
 		
 	}

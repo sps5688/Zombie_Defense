@@ -1,20 +1,26 @@
-package code {
-	
-	public class Zombie {
-		private var:currentTile:Tile;
+package  
+{
+	/**
+	 * ...
+	 * @author Steve Shaw
+	 */
+	public class Zombie 
+	{
+		private var location:Number;
+		private var lookedForPath:Boolean = false;
 		
-		public Zombie() {
-			
+		public function Zombie(location:Number) 
+		{
+			this.location = location;
 		}
 		
-		public function getCurrentTile() {
-			return currentTile;
+		public function getLocation():Number {
+			return location;
 		}
 		
-		public function setCurrentTile(tile:Tile) {
-			currentTile = tile;
+		public function setLocation(location:Number):void {
+			this.location = location;
 		}
-
 	}
-	
+
 }
