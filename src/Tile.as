@@ -96,6 +96,68 @@ package
 				healthSouth -= DAMAGE_INCREMENT;
 			}
 		}
+		
+		public function getWallHealth(wall:String):Number {
+			switch (wall) {
+				case "west":
+					return healthWest;
+					break;
+				case "east":
+					return healthEast;
+					break;
+				case "north":
+					return healthNorth;
+					break;
+				case "south":
+					return healthSouth;
+					break;
+				default:
+					break;
+			}
+			return 0;
+		}
+		
+		public function setWallHealth(wall:String, health:Number):void {
+			switch (wall) {
+				case "west":
+					healthWest = health;
+					break;
+				case "east":
+					healthEast = health;
+					break;
+				case "north":
+					healthNorth = health;
+					break;
+				case "south":
+					healthSouth = health;
+					break;
+				default:
+					break;
+			}
+		}
+		
+		public function breakWall(wall:String):void {
+			switch (wall) {
+				case "west":
+					west = true;
+					healthWest = INIT_HEALTH;
+					break;
+				case "east":
+					east = true;
+					healthEast = INIT_HEALTH;
+					break;
+				case "north":
+					north = true;
+					healthNorth = INIT_HEALTH;
+					break;
+				case "south":
+					south = true;
+					healthSouth = INIT_HEALTH;
+					break;
+				default:
+					break;
+			}
+		}
 	}
 
 }

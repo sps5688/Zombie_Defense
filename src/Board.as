@@ -9,20 +9,15 @@ package
 		private var ROWS:Number = 5;
 		private var COLLUMNS:Number = 5;
 		private var PLAYER_TILE:Number = 12;
-		private var TILE_TYPES:Array = new Array("T Shape", "L Shape", "Straight", "4 Direction");
+		private var MOVE_BREAK_P:Number = 0.50;
+		private var TILE_TYPES:Array = new Array("T Shape", "L Shape", "Straight"); // No 4 direction to start
+		//private var TILE_TYPES:Array = new Array("Straight"); // For wall breaking testing
 		private var board:Array = new Array();
 		
 		// Zombie info
 		private var zombies:Array = new Array();
 		
-		// TESTING
-		//private var ROWS:Number = 3;
-		//private var COLLUMNS:Number = 3;
-		//private var PLAYER_TILE:Number = 4;
-		//private var TILE_TYPES:Array = new Array("4 Direction");
-		
 		public function Board() {
-			// Create board as an 2d-array
 			for (var i:Number = 0; i < ROWS; i++) {
 				for (var j:Number = 0; j < COLLUMNS; j++) {
 					var id:Number = i * COLLUMNS  + j
@@ -47,17 +42,10 @@ package
 						east = false;
 						south = true;
 						north = true;
-					}else if (tileType == "4 Direction") {
-						west = true;
-						east = true;
-						north = true;
-						south = true;
 					}
 					
 					var newTile:Tile = new Tile(id, tileType, west, east, north, south);
 					board.push(newTile);
-					
-					//trace("Created tile with parameters: " + id + " " + tileType + " " + west + " " + east + " " + north + " " + south);
 				}
 			}
 		}
@@ -84,13 +72,13 @@ package
 				var curTile:Tile = unvisitedNodes.shift();
 				
 				if (curTile.getID() == PLAYER_TILE) {
-					//trace("Path found");
+					// Path found
 					return constructPath(board[PLAYER_TILE]);
 				}else {
 					vistedNodes.push(curTile);
 					
 					// Add neighbors
-					var curTileWalls:Array = getOpenWalls(curTile);
+					var curTileWalls:Array = getWalls(curTile, true);
 					for (var i:Number = 0; i < curTileWalls.length; i++) {
 						var neighborTile:Tile = curTileWalls[i];
 						
@@ -104,7 +92,7 @@ package
 					}	
 				}
 			}
-			//trace("Path not found");
+			// Path not found, return null
 			return null;
 		}
 		
@@ -112,66 +100,158 @@ package
 			zombies.push(new Zombie(location));
 		}
 		
+		public function getZombies():Number {
+			return zombies.length;
+		}
+		
 		public function moveZombies():void {
 			for (var i:Number = 0; i < zombies.length; i++) {
 				var curZombie:Zombie = zombies[i];
 				var curLocation:Number = curZombie.getLocation();
-				var tile:Tile = board[curLocation];
+				var curTile:Tile = board[curLocation];
 				
 				// Compute path
-				var path:Array = search(tile);
+				var path:Array = search(curTile);
 				if (path != null) {
 					// Move zombie to next tile
 					var nextTile:Tile = path.shift();
-					trace("Moving zombie " + i + " from " + curLocation + " to " + nextTile.getID());
+					trace("Moving zombie " + i + " from " + curTile.getID() + " to " + nextTile.getID() + " - there is a path");
 					curZombie.setLocation(nextTile.getID());
+					
+					if (curZombie.getLocation() == PLAYER_TILE) {
+						trace("MMMM PLAYER, removed zombie");
+						zombies.splice(i, 1);
+					}
 				}else {
+					// Get open walls from current tile
+					var openWalls:Array = getWalls(curTile, true);
+					
 					// Move or break a wall with a probability
+					if (Math.random() < MOVE_BREAK_P) {
+						// Find an open adjacent tile
+						var tileToMoveTo:Tile;
+						do {
+							tileToMoveTo = openWalls[Math.floor(Math.random() * openWalls.length)];
+						}while (tileToMoveTo == null);
+						
+						// Move zombie
+						trace("Moving zombie " + i + " from " + curTile.getID() + " to " + tileToMoveTo.getID() + " - there is not a path");
+						curZombie.setLocation(tileToMoveTo.getID());
+					}else {
+						// Find a closed wall to start breaking
+						var wallToDamage:Tile;
+						var index:Number;
+						do {
+							index = Math.floor(Math.random() * openWalls.length);
+							wallToDamage = openWalls[index];
+						}while (wallToDamage != null);
+						
+						var curTileDirection:String;
+						
+						// Find wall direction
+						switch(index) {
+							case 0:
+								curTileDirection = "west";
+								break;
+							case 1:
+								curTileDirection = "east";
+								break;
+							case 2:
+								curTileDirection = "north";
+								break;
+							case 3:
+								curTileDirection = "south";
+								break;
+						}
+						
+						// Damage current wall, in a direction
+						if (isValidWall(curTile.getID(), curTileDirection)) {
+							curTile.damageWall(curTileDirection);
+							trace("Zombie " + i + " is damaging " + curTile.getID() + "'s " + curTileDirection + " wall - there is not a path");
+							
+							// Check for broken wall (tile type change)
+							if (curTile.getWallHealth(curTileDirection) == 0) {
+								trace("Wall broken - opening up " + curTile.getID() + "'s " + curTileDirection + " wall");
+								curTile.breakWall(curTileDirection);
+							}
+						}
+					}
 				}
 			}
 		}
 		
-		private function getOpenWalls(tile:Tile):Array {
-			var openPaths:Array = new Array();
+		private function isValidWall(id:Number, direction:String):Boolean {
+			var isValid:Boolean = false;
+			
+			switch(direction) {
+				case "west":
+					if (id % COLLUMNS != 0) {
+						isValid = true;
+					}
+					break;
+				case "east":
+					if ((id + 1) / COLLUMNS != 0) {
+						isValid = true;
+					}
+					break;
+				case "north":
+					if (id >= COLLUMNS) {
+						isValid = true;
+					}
+					break;
+				case "south":
+					if (id < ((COLLUMNS * COLLUMNS) - COLLUMNS)) {
+						isValid = true;
+					}
+					break;
+				default:
+					break;
+			}
+			
+			return isValid;
+		}
+		
+		private function getWalls(tile:Tile, open:Boolean):Array {
+			var paths:Array = new Array();
 			var id:Number = tile.getID();
 			
 			// WEST
-			if (tile.getWestWall() && id % COLLUMNS != 0) {
-				// Not 0 5 10 15 20
+			if (tile.getWestWall() && isValidWall(id,"west")) {
+				// Not left collumn
 				// Get west tile
-				openPaths.push(board[id - 1]);
+				paths.push(board[id - 1]);
 			}else {
-				openPaths.push(null);
+				paths.push(null);
 			}
 			
 			// EAST
-			if (tile.getEastWall() && ((id + 1) / COLLUMNS != 0)) {
-				// Not 4 9 14 19 24
+			if (tile.getEastWall() && isValidWall(id,"east")) {
+				// Not right collumn
 				// Get east tile
-				openPaths.push(board[id + 1]);
+				paths.push(board[id + 1]);
 			}else {
-				openPaths.push(null);
+				paths.push(null);
 			}
 			
 			// NORTH
-			if (tile.getNorthWall() && id >= COLLUMNS) {
-				// Not 0-4
+			if (tile.getNorthWall() && isValidWall(id,"north")) {
+				// Not top row
 				// Get north tile
-				openPaths.push(board[id - COLLUMNS]);
+				paths.push(board[id - COLLUMNS]);
 			}else {
-				openPaths.push(null);
+				paths.push(null);
 			}
 			
 			// SOUTH
-			if (tile.getSouthWall() && id < ((COLLUMNS * COLLUMNS) - COLLUMNS)) {
-				// Not 20-24
+			if (tile.getSouthWall() && isValidWall(id,"south")) {
+				// Not bottom row
 				// Get south tile
-				openPaths.push(board[id + COLLUMNS]);
+				paths.push(board[id + COLLUMNS]);
 			}else {
-				openPaths.push(null);
+				paths.push(null);
 			}
 			
-			return openPaths;
+			return paths;
 		}
 		
 		private function constructPath(tile:Tile):Array {

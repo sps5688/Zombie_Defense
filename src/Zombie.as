@@ -1,13 +1,17 @@
 package  
 {
+	import flash.display.Bitmap;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.ui.Mouse;
+	
 	/**
 	 * ...
 	 * @author Steve Shaw
 	 */
-	public class Zombie 
+	public class Zombie extends Sprite
 	{
 		private var location:Number;
-		private var lookedForPath:Boolean = false;
 		
 		public function Zombie(location:Number) 
 		{
@@ -21,6 +25,7 @@ package
 		public function setLocation(location:Number):void {
 			this.location = location;
 		}
+		
 	}
 
 }
