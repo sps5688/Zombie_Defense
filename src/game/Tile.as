@@ -14,24 +14,29 @@ package game
 	{
 		//private var Prototile:Class;
 		private var mc_tile:TileClip;
+		private var orientation:int = 0;
 
 		public function Tile() {
 			mc_tile = new TileClip();
 			addChild( mc_tile );
-			addEventListener(MouseEvent.CLICK, rotate);
+			addEventListener(MouseEvent.CLICK, rotateLeft);
 			addEventListener(MouseEvent.RIGHT_CLICK, rotateRight);
-			//TODO: right click
 		}
 
-		private function rotate( e:MouseEvent ):void 
+		private function rotateLeft(e:MouseEvent):void 
 		{
-			//rotateRight();
-			mc_tile.gotoAndPlay(mc_tile.currentFrame % 48 + 2 ); //TODO: make label
+			parent.addChild( this ); // move to front
+			mc_tile.gotoAndPlay(mc_tile.currentFrame % 48 + 50 );
+			//mc_tile.gotoAndPlay( "left" + orientation ); //TODO: make label
+			orientation = (orientation + 3) % 4;
 		}
 
 		private function rotateRight(e:MouseEvent):void 
 		{
-			mc_tile.gotoAndPlay( mc_tile.currentFrame % 48 + 50 );
+			parent.addChild( this ); // move to front
+			mc_tile.gotoAndPlay( mc_tile.currentFrame % 48 + 2 );
+			//mc_tile.gotoAndPlay( "right" + orientation ); //TODO: make label
+			orientation = (orientation + 1) % 4;
 		}
 		
 	}

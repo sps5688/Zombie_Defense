@@ -31,6 +31,10 @@ package game
 		
 		private function buildUI():void
 		{
+			//FIXME should be constants - in Tile.as?
+			var margin:int = 25;
+			var padding:int = 5;
+			
 			//build 2d array of tiles
 			for (var i:int = 0; i < 5; i++)
 			{
@@ -38,8 +42,9 @@ package game
 				{
 					var newTile:Tile = new Tile();
 					LayerManager.addToLayer(newTile, Global.LAYER_BG);
-					newTile.x = 90 + 130 * i;
-					newTile.y = 90 + 130 * j;
+					// 90 + 130 * i;
+					newTile.x = margin + newTile.width/2 + (newTile.width + padding) * i;
+					newTile.y = margin + newTile.width/2 + (newTile.width + padding) * j;
 				}
 			}
 		}
