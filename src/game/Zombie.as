@@ -1,20 +1,31 @@
 package game 
 {
 	import game.Board;
+	import lib.ZombieClip;
+	import flash.display.MovieClip;
+	import lib.LayerManager;
+	import lib.Global;
 	
 	/**
 	 * ...
 	 * @author Brett Slabaugh
 	 * @author Steve Shaw
 	 */
-	public class Zombie 
+	public class Zombie extends MovieClip
 	{
+		private var mc_zombie:ZombieClip;
 		private var location:Number;
 		private var MOVE_BREAK_P:Number = 0.50;
 		private var playerLocation:Number;
 		
 		public function Zombie(location:Number, playerLocation:Number) 
 		{
+			//add movieclip to stage
+			mc_zombie = new ZombieClip();
+			addChild(mc_zombie);
+			this.x = 90 + 130 * Board.getTileX(location);
+			this.y = 90 + 130 * Board.getTileY(location);
+			LayerManager.addToLayer(this, Global.LAYER_ENTITIES);
 			this.location = location;
 			this.playerLocation = playerLocation;
 		}
@@ -27,6 +38,8 @@ package game
 		public function setLocation(location:Number):void 
 		{
 			this.location = location;
+			this.x = 90 + 130 * Board.getTileX(location);
+			this.y = 90 + 130 * Board.getTileY(location);
 		}
 		
 		public function move(board:Board):Boolean {

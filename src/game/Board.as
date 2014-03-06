@@ -1,6 +1,6 @@
 package game 
 {
-	import assets.TileClip;
+	import lib.TileClip;
 	import flash.display.MovieClip;
 	import lib.LayerManager;
 	import lib.Global;
@@ -244,6 +244,16 @@ package game
 		
 		public function getPlayerTile():Number {
 			return PLAYER_TILE;
+		}
+		
+		public static function getTileX(id:Number):int
+		{
+			return id % 5;
+		}
+		
+		public static function getTileY(id:Number):int
+		{
+			return id / 5;
 		}
 	}
 }

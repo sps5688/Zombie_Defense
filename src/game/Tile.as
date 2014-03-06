@@ -1,10 +1,8 @@
 package game 
 {
-	import assets.TileClip;
-	import flash.display.Bitmap;
+	import lib.TileClip;
 	import flash.display.MovieClip;
 	import flash.events.MouseEvent;
-	import flash.events.Event;
 	
 	/**
 	 * ...
@@ -41,6 +39,7 @@ package game
 		public function Tile(id:Number, type:String, west:Boolean, east:Boolean, north:Boolean, south:Boolean) {
 			// Create new TileClip and add to stage
 			mc_tile = new TileClip();
+			mc_tile.stop();
 			addChild(mc_tile);
 			
 			// Add event listeners for rotation
