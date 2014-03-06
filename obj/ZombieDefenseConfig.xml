@@ -32,15 +32,15 @@
     </define>
     <verbose-stacktraces>true</verbose-stacktraces>
     <source-path append="true">
-      <path-element>D:\Users\bks5231\Downloads\Zombie_Defense-master\Zombie_Defense-master\src</path-element>
+      <path-element>F:\Zombie_Defense\src</path-element>
       <path-element>C:\Program Files (x86)\FlashDevelop\Library\AS3\classes</path-element>
     </source-path>
     <library-path append="true">
-      <path-element>D:\Users\bks5231\Downloads\Zombie_Defense-master\Zombie_Defense-master\lib\Assets.swc</path-element>
+      <path-element>F:\Zombie_Defense\lib\Assets.swc</path-element>
     </library-path>
   </compiler>
   <file-specs>
-    <path-element>D:\Users\bks5231\Downloads\Zombie_Defense-master\Zombie_Defense-master\src\Main.as</path-element>
+    <path-element>F:\Zombie_Defense\src\Main.as</path-element>
   </file-specs>
   <default-background-color>#FFFFFF</default-background-color>
   <default-frame-rate>30</default-frame-rate>

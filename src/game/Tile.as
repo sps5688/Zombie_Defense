@@ -1,8 +1,13 @@
-package game 
-{
+package game {
 	import lib.TileClip;
+	import lib.TileClipCross;
+	import lib.TileClipL;
+	import lib.TileClipStraight;
+	import lib.TileClipT;
+	import lib.TileClipPlayer;
 	import flash.display.MovieClip;
 	import flash.events.MouseEvent;
+	import ZombieDefense_fla.TileStraight_2;
 	
 	/**
 	 * ...
@@ -10,8 +15,18 @@ package game
 	 * @author Steve Shaw
 	 * @author David Wilson
 	 */
-	public class Tile extends MovieClip
-	{
+	public class Tile extends MovieClip	{
+		
+		// Tile types
+		public static const STRAIGHT:String = "Straight";
+		public static const L_SHAPE:String = "L Shape";
+		public static const T_SHAPE:String = "T Shape";
+		public static const CROSS:String = "Cross";
+		public static const PLAYER:String = "Player";
+		
+		public static const MARGIN:int = 25;
+		public static const SPACING:int = 5;
+		
 		//private var Prototile:Class;
 		private var mc_tile:TileClip;
 		
@@ -20,13 +35,10 @@ package game
 		private var type:String;
 		
 		// Wall status
-		private var west:Boolean;
-		private var east:Boolean;
-		private var north:Boolean;
-		private var south:Boolean;
+		private var orientation:int;
 		
 		// Wall health
-		private var INIT_HEALTH:Number = 10;
+		private var INIT_HEALTH:Number = 3;
 		private var DAMAGE_INCREMENT:Number = 1;
 		private var healthWest:Number = INIT_HEALTH;
 		private var healthEast:Number = INIT_HEALTH;
@@ -36,54 +48,92 @@ package game
 		// Path info
 		private var pathParent:Tile;
 
-		public function Tile(id:Number, type:String, west:Boolean, east:Boolean, north:Boolean, south:Boolean) {
-			// Create new TileClip and add to stage
-			mc_tile = new TileClip();
-			mc_tile.stop();
-			addChild(mc_tile);
-			
-			// Add event listeners for rotation
-			addEventListener(MouseEvent.CLICK, rotate);
-			addEventListener(MouseEvent.RIGHT_CLICK, rotateRight);
+		public function Tile(id:Number, type:String) {
 			
 			// Init vars
 			this.id = id;
 			this.type = type;
 			
-			this.west = west;
-			this.east = east;
-			this.north = north;
-			this.south = south;
+			// Create new TileClip and add to stage
+			switch( type ) {
+				case STRAIGHT:
+					mc_tile = new TileClipStraight();
+					healthNorth = 0;
+					healthEast = INIT_HEALTH;
+					healthSouth = 0;
+					healthWest = INIT_HEALTH;
+					break;
+				case L_SHAPE:
+					mc_tile = new TileClipL();
+					healthNorth = INIT_HEALTH;
+					healthEast = 0;
+					healthSouth = 0;
+					healthWest = INIT_HEALTH;
+					break;
+				case T_SHAPE:
+					mc_tile = new TileClipT();
+					healthNorth = 0;
+					healthEast = 0;
+					healthSouth = 0;
+					healthWest = INIT_HEALTH;
+					break;
+				case CROSS:
+					mc_tile = new TileClipCross();
+					healthNorth = 0;
+					healthEast = 0;
+					healthSouth = 0;
+					healthWest = 0;
+					break;
+				case PLAYER:
+					mc_tile = new TileClipPlayer();
+					healthNorth = 0;
+					healthEast = 0;
+					healthSouth = 0;
+					healthWest = 0;
+					break;
+			}
+			setOrientation(Math.floor(Math.random() * 4));
+			addChild(mc_tile);
+			
+			// Add event listeners for rotation
+			addEventListener(MouseEvent.CLICK, rotateLeft);
+			addEventListener(MouseEvent.RIGHT_CLICK, rotateRight);
 		}
 
-		private function rotate(e:MouseEvent):void 
-		{
-			mc_tile.gotoAndPlay(mc_tile.currentFrame % 48 + 2); //TODO: make label
+		private function rotateLeft(e:MouseEvent):void {
+			if ( type == PLAYER ) return;
+			mc_tile.gotoAndPlay("left" + orientation);
+			orientation = (orientation + 3) % 4;
 			
-			var tmpW:Boolean = west;
-			var tmpE:Boolean = east;
-			var tmpN:Boolean = north;
-			var tmpS:Boolean = south;
-			
-			north = tmpW;
-			south = tmpE;
-			east = tmpN;
-			west = tmpS;
+			var tmpN:Number = healthNorth;
+			healthNorth = healthEast;
+			healthEast = healthSouth;
+			healthSouth = healthWest;
+			healthWest = tmpN;
 		}
 
-		private function rotateRight(e:MouseEvent):void 
-		{
-			mc_tile.gotoAndPlay(mc_tile.currentFrame % 48 + 50);
+		private function rotateRight(e:MouseEvent):void {
+			if ( type == PLAYER ) return;
+			mc_tile.gotoAndPlay("right" + orientation);
+			orientation = (orientation + 1) % 4;
 			
-			var tmpW:Boolean = west;
-			var tmpE:Boolean = east;
-			var tmpN:Boolean = north;
-			var tmpS:Boolean = south;
-			
-			north = tmpE;
-			south = tmpW;
-			east = tmpS;
-			west = tmpN;
+			var tmpN:Number = healthNorth;
+			healthNorth = healthWest;
+			healthWest = healthSouth;
+			healthSouth = healthEast;
+			healthEast = tmpN;
+		}
+		
+		private function setOrientation(o:int):void {
+			if ( type == PLAYER ) return;
+			mc_tile.gotoAndStop("right" + o); // "right" is arbitrary
+			var dirs:Array = new Array(healthNorth, healthEast, healthSouth, healthWest );
+			var diff:int = 4 + orientation - o;
+			healthNorth = dirs[diff % 4];
+			healthEast = dirs[(diff + 1) % 4];
+			healthSouth = dirs[(diff + 2) % 4];
+			healthWest = dirs[(diff + 3) % 4];
+			orientation = o;
 		}
 		
 		// GETTERS
@@ -92,19 +142,19 @@ package game
 		}
 		
 		public function getWestWall():Boolean {
-			return west;
+			return healthWest <= 0;
 		}
 		
 		public function getEastWall():Boolean {
-			return east;
+			return healthEast <= 0;
 		}
 		
 		public function getNorthWall():Boolean {
-			return north;
+			return healthNorth <= 0;
 		}
 		
 		public function getSouthWall():Boolean {
-			return south;
+			return healthSouth <= 0;
 		}
 		
 		public function getPathParent():Tile {
@@ -112,36 +162,39 @@ package game
 		}
 		
 		// SETTERS
-		public function setWestWall(status:Boolean):void {
-			west = status;
-		}
-		
-		public function setEastWall(status:Boolean):void {
-			east = status;
-		}
-		
-		public function setNorthWall(status:Boolean):void {
-			north = status;
-		}
-		
-		public function setSouthWall(status:Boolean):void {
-			south = status;
-		}
-		
 		public function setPathParent(tile:Tile):void {
 			pathParent = tile;
 		}
 		
 		public function damageWall(wallToDamage:String):void {
+			var wallInt:int;
 			if (wallToDamage == "west") {
 				healthWest -= DAMAGE_INCREMENT;
+				trace( healthWest );
+				wallInt = 3;
 			}else if (wallToDamage == "east") {
 				healthEast -= DAMAGE_INCREMENT;
+				trace( healthEast );
+				wallInt = 1;
 			}else if (wallToDamage == "north") {
 				healthNorth -= DAMAGE_INCREMENT;
+				trace( healthNorth );
+				wallInt = 0;
 			}else {
 				healthSouth -= DAMAGE_INCREMENT;
+				trace( healthSouth );
+				wallInt = 2;
 			}
+			
+			wallInt = (4 + wallInt - orientation) % 4;
+			if (wallInt == 0 && mc_tile.getNorthWall() != null)
+				mc_tile.getNorthWall().nextFrame();
+			else if (wallInt == 1 &&  mc_tile.getEastWall() != null)
+				mc_tile.getEastWall().nextFrame();
+			else if (wallInt == 2 && mc_tile.getSouthWall() != null)
+				mc_tile.getSouthWall().nextFrame();
+			else if (wallInt == 3 && mc_tile.getWestWall() != null)
+				mc_tile.getWestWall().nextFrame();
 		}
 		
 		public function getWallHealth(wall:String):Number {
@@ -184,26 +237,37 @@ package game
 		}
 		
 		public function breakWall(wall:String):void {
+			var wallInt:int;
 			switch (wall) {
 				case "west":
-					west = true;
-					healthWest = INIT_HEALTH;
+					wallInt = 3;
+					//healthWest = INIT_HEALTH;
 					break;
 				case "east":
-					east = true;
-					healthEast = INIT_HEALTH;
+					wallInt = 1;
+					//healthEast = INIT_HEALTH;
 					break;
 				case "north":
-					north = true;
-					healthNorth = INIT_HEALTH;
+					wallInt = 0;
+					//healthNorth = INIT_HEALTH;
 					break;
 				case "south":
-					south = true;
-					healthSouth = INIT_HEALTH;
+					wallInt = 2;
+					//healthSouth = INIT_HEALTH;
 					break;
 				default:
 					break;
 			}
+			
+			wallInt = (4 + wallInt - orientation) % 4;
+			if (wallInt == 0 && mc_tile.getNorthWall() != null)
+				mc_tile.getNorthWall().play();
+			else if (wallInt == 1 &&  mc_tile.getEastWall() != null)
+				mc_tile.getEastWall().play();
+			else if (wallInt == 2 && mc_tile.getSouthWall() != null)
+				mc_tile.getSouthWall().play();
+			else if (wallInt == 3 && mc_tile.getWestWall() != null)
+				mc_tile.getWestWall().play();
 		}
 		
 	}

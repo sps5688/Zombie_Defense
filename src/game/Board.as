@@ -17,39 +17,19 @@ package game
 		private var COLLUMNS:Number = 5;
 		private var PLAYER_TILE:Number = 12;
 		
-		//private var TILE_TYPES:Array = new Array("T Shape", "L Shape", "Straight"); // No 4 direction to start
-		private var TILE_TYPES:Array = new Array("Straight"); // For wall breaking testing
+		private var TILE_TYPES:Array = new Array(Tile.T_SHAPE, Tile.L_SHAPE, Tile.STRAIGHT); // No 4 direction to start
+		//private var TILE_TYPES:Array = new Array("Straight"); // For wall breaking testing
 		private var tiles:Array = new Array();
 		
 		public function Board() {
 			for (var i:Number = 0; i < ROWS; i++) {
 				for (var j:Number = 0; j < COLLUMNS; j++) {
 					var id:Number = i * COLLUMNS  + j
-					var tileType:String = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
-					var west:Boolean;
-					var east:Boolean;
-					var north:Boolean;
-					
-					var south:Boolean;
-					if (tileType == "T Shape") {
-						west = true;
-						east = true;
-						north = false;
-						south = true;
-					}else if (tileType == "L Shape") {
-						west = false;
-						east = true;
-						north = true;
-						south = false;
-					}else if (tileType == "Straight") {
-						west = false;
-						east = false;
-						south = true;
-						north = true;
-					}
+					var tileType:String = (i == 2 && j == 2) ? Tile.PLAYER :
+						TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
 					
 					// Create tile and add to array
-					var newTile:Tile = new Tile(id, tileType, west, east, north, south);
+					var newTile:Tile = new Tile(id, tileType);
 					tiles.push(newTile);
 					
 					// Add tile to stage
