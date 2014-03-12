@@ -17,8 +17,7 @@ package game
 		private var COLLUMNS:Number = 5;
 		private var PLAYER_TILE:Number = 12;
 		
-		private var TILE_TYPES:Array = new Array(Tile.T_SHAPE, Tile.L_SHAPE, Tile.STRAIGHT); // No 4 direction to start
-		//private var TILE_TYPES:Array = new Array("Straight"); // For wall breaking testing
+		private var TILE_TYPES:Array = new Array(Tile.T_SHAPE, Tile.L_SHAPE, Tile.STRAIGHT);
 		private var tiles:Array = new Array();
 		
 		public function Board() {
@@ -34,11 +33,8 @@ package game
 					
 					// Add tile to stage
 					LayerManager.addToLayer(newTile, Global.LAYER_BG);
-					// Had to change to get ordering consistent
 					newTile.x = 90 + 130 * j;
 					newTile.y = 90 + 130 * i;
-					//newTile.x = 90 + 130 * i;
-					//newTile.y = 90 + 130 * j;
 				}
 			}
 		}
@@ -222,17 +218,55 @@ package game
 			return validMove;
 		}
 		
+		public function getOptimalDirection(location:Number):String {
+			var optimalDirection:String = "south";
+			var minDistance:Number = 100;
+			
+			var eastDist:Number = Math.abs(PLAYER_TILE - (location + 1));
+			var westDist:Number = Math.abs(PLAYER_TILE - (location - 1));
+			var northDist:Number = Math.abs(PLAYER_TILE - (location - COLLUMNS));
+			var southDist:Number = Math.abs(PLAYER_TILE - (location + COLLUMNS));
+			
+			if (eastDist < minDistance) {
+				// East
+				minDistance = eastDist;
+				optimalDirection = "east";
+			}
+						
+			if (westDist < minDistance) {
+				// West
+				minDistance = westDist;
+				optimalDirection = "west";
+			}
+			
+			if (northDist < minDistance) {
+				// North
+				minDistance = northDist;
+				optimalDirection = "north";
+			}
+			
+			if (southDist < minDistance) {
+				// South
+				minDistance = southDist
+				optimalDirection = "south";
+			}
+			
+			return optimalDirection;
+		}
+		
 		public function getPlayerTile():Number {
 			return PLAYER_TILE;
 		}
 		
-		public static function getTileX(id:Number):int
-		{
+		public function getTile(index:Number):Tile {
+			return tiles[index];
+		}
+		
+		public static function getTileX(id:Number):int{
 			return id % 5;
 		}
 		
-		public static function getTileY(id:Number):int
-		{
+		public static function getTileY(id:Number):int{
 			return id / 5;
 		}
 	}

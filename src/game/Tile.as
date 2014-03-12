@@ -47,6 +47,8 @@ package game {
 		// ID and type
 		private var id:Number;
 		private var type:String;
+		private var changed:Boolean = false;
+		private var containsZombie:Boolean = false;
 		
 		// Wall status
 		private var orientation:int;
@@ -129,31 +131,40 @@ package game {
 		}
 
 		private function rotateLeft(e:MouseEvent):void {
-			if ( type == PLAYER ) return;
-			mc_tile.gotoAndPlay("left" + orientation);
-			orientation = (orientation + 3) % 4;
-			
-			var tmpN:Number = healthNorth;
-			healthNorth = healthEast;
-			healthEast = healthSouth;
-			healthSouth = healthWest;
-			healthWest = tmpN;
-			
-			updateDebugFields();
+			if (!containsZombie) {
+				if ( type == PLAYER ) return;
+				mc_tile.gotoAndPlay("left" + orientation);
+				orientation = (orientation + 3) % 4;
+				
+				var tmpN:Number = healthNorth;
+				healthNorth = healthEast;
+				healthEast = healthSouth;
+				healthSouth = healthWest;
+				healthWest = tmpN;
+				
+				updateDebugFields();
+				
+				changed = true;
+			}
 		}
 
 		private function rotateRight(e:MouseEvent):void {
-			if ( type == PLAYER ) return;
-			mc_tile.gotoAndPlay("right" + orientation);
-			orientation = (orientation + 1) % 4;
+			if (!containsZombie) {
+				if ( type == PLAYER ) return;
+				mc_tile.gotoAndPlay("right" + orientation);
+				orientation = (orientation + 1) % 4;
 			
-			var tmpN:Number = healthNorth;
-			healthNorth = healthWest;
-			healthWest = healthSouth;
-			healthSouth = healthEast;
-			healthEast = tmpN;
+				var tmpN:Number = healthNorth;
+				healthNorth = healthWest;
+				healthWest = healthSouth;
+				healthSouth = healthEast;
+				healthEast = tmpN;
 			
-			updateDebugFields();
+				updateDebugFields();
+			
+				changed = true;
+			}
+
 		}
 		
 		private function setOrientation(o:int):void {
@@ -293,6 +304,18 @@ package game {
 			eastField.text = ""+healthEast;
 			southField.text = ""+healthSouth;
 			westField.text = ""+healthWest;
+		}
+		
+		public function hasChanged():Boolean {
+			return changed;
+		}
+		
+		public function reset():void {
+			changed = false;
+		}
+		
+		public function setZombieOn(on:Boolean):void {
+			containsZombie = on;
 		}
 		
 	}

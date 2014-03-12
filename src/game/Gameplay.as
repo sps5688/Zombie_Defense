@@ -57,7 +57,9 @@ package game
 			
 			// init zombies
 			// For now, need to spawn a zombie in a static location to test pathfinding
-			zombies.push(new Zombie(1, board.getPlayerTile()));
+			zombies.push(new Zombie(23, board.getPlayerTile()));
+			var tile:Tile = board.getTile(23);
+			tile.setZombieOn(true);
 			
 			// Move enemies
 			if( DEBUG ) {

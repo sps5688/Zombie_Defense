@@ -11,15 +11,15 @@ package game
 	 * @author Brett Slabaugh
 	 * @author Steve Shaw
 	 */
-	public class Zombie extends MovieClip
-	{
+	public class Zombie extends MovieClip{
 		private var mc_zombie:ZombieClip;
 		private var location:Number;
-		private var MOVE_BREAK_P:Number = 0.50;
 		private var playerLocation:Number;
+		private var startedDamagingWall:Boolean = false;
+		private var zombieMoved:Boolean = false;
+		private var pursueOptimal:Boolean = false;
 		
-		public function Zombie(location:Number, playerLocation:Number) 
-		{
+		public function Zombie(location:Number, playerLocation:Number) {
 			//add movieclip to stage
 			mc_zombie = new ZombieClip();
 			addChild(mc_zombie);
@@ -30,13 +30,11 @@ package game
 			this.playerLocation = playerLocation;
 		}
 		
-		public function getLocation():Number 
-		{
+		public function getLocation():Number {
 			return location;
 		}
 		
-		public function setLocation(location:Number):void 
-		{
+		public function setLocation(location:Number):void {
 			this.location = location;
 			this.x = 90 + 130 * Board.getTileX(location);
 			this.y = 90 + 130 * Board.getTileY(location);
@@ -46,89 +44,156 @@ package game
 			var tileGrid:Array = board.getTileGrid();
 			var curTile:Tile = tileGrid[location];
 			var neighborTile:Tile;
+			var neighborTileIndex:Number;
 			
-			// Compute path
+			// Determine if there's a path to the player
 			var path:Array = search(curTile, board);
 			if (path != null) {
-				// Move zombie to next tile
+				// If there is a path, move zombie to next tile
 				neighborTile = path.shift();
 				trace("Moving zombie " + " from " + curTile.getID() + " to " + neighborTile.getID() + " - there is a path");
 				setLocation(neighborTile.getID());
 				
+				// Update tiles
+				neighborTile.setZombieOn(true);
+				curTile.setZombieOn(false);
+				
+				// Check for player death
 				if (location == board.getPlayerTile()) {
 					trace("MMMM PLAYER, removed zombie");
-					return true; // will be removed
+					return true;
 				}
 			}else {
-				// Get open walls from current tile
-				var openWalls:Array = board.getOpenWalls(curTile);
+				// No path to player, determine optimal tile to move to
+				var optimalDirection:String = board.getOptimalDirection(location);
+				var optimalTile:Tile;
+				var oppositeDirection:String = board.getOppositeDirection(optimalDirection);
 				
-				// Move or break a wall with a probability
-				if (Math.random() < MOVE_BREAK_P) {
-					// Find an open adjacent tile
-					var validMove:Boolean = true;
-					do {
-						neighborTile = openWalls[Math.floor(Math.random() * openWalls.length)];
+				// Determine optimal direction to go
+				switch(optimalDirection) {
+					case "west":
+						optimalTile = board.getNeighborTile(location, "west")
+						break;
+					case "east":
+						optimalTile = board.getNeighborTile(location, "east");
+						break;
+					case "north":
+						optimalTile = board.getNeighborTile(location, "north");
+						break;
+					case "south":
+						optimalTile = board.getNeighborTile(location, "south");
+						break;
+				}
+				
+				// If zombie is not already damaging a wall and the tiles have not rotated
+				if (!startedDamagingWall && !curTile.hasChanged() && !optimalTile.hasChanged()) {			
+					// If there is an open tile to move to
+					if (optimalTile != null) {
+						trace("Optimal move is moving to tile " + optimalTile.getID());
+							
+						// Determine if the zombie can move to the optimal tile
+						var neighborOpen:Boolean = board.isValidMove(optimalDirection, optimalTile);
+						trace("Tile " + curTile.getID() + "'s " + optimalDirection + " is " + neighborOpen);
+						var currentOpen:Boolean = board.isValidMove(oppositeDirection, curTile);
+						trace("Tile " + optimalTile.getID() + "'s " + oppositeDirection + " is " + currentOpen);
 						
-						// Need to see if the neighbor tile is open in the opposite direction
-						if (neighborTile != null) {
-							var direction:String = board.getNeighborDirection(curTile, neighborTile);
-							validMove = board.isValidMove(direction, neighborTile);
+						// If the zombie can move to it, move there
+						if (neighborOpen && currentOpen) {
+							trace("Moving zombie " + " from " + curTile.getID() + " to " + optimalTile.getID() + " - there is not a path");
+							setLocation(optimalTile.getID());
+							
+							// Update tiles
+							optimalTile.setZombieOn(true);
+							curTile.setZombieOn(false);
+							
+							zombieMoved = true;
+						}else {
+							// Zombie can't move to the optimal tile
+							trace("Optimal move to tile " + optimalTile.getID() + " is not possible.");
+							zombieMoved = false;
+							pursueOptimal = true;
 						}
-					}while (neighborTile == null);
-					
-					// Move zombie, if valid move
-					if (validMove) {
-						trace("Moving zombie " + " from " + curTile.getID() + " to " + neighborTile.getID() + " - there is not a path");
-						setLocation(neighborTile.getID());
 					}else {
-						trace("Tile " + neighborTile.getID() + "'s opposite direction not open");
+						trace("There are no open tiles to move to.");
+						// No open tiles to move to
+						zombieMoved = false;
+						startedDamagingWall = false;
+					}
+					
+					// If the zombie can't move to the optimal tile, begin to damage walls
+					if (!zombieMoved) {
+						// Damage optimal tile's wall
+						if (pursueOptimal) {
+							// Check for tile rotations
+							if (!curTile.hasChanged() && !optimalTile.hasChanged()) {
+								// Damage walls
+								trace("Zombie is damaging " + curTile.getID() + "'s " + optimalDirection + " wall and " +
+								optimalTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
+								
+								if (curTile.getWallHealth(optimalDirection) != 0) {
+									curTile.damageWall(optimalDirection);
+								}
+								
+								if (optimalTile.getWallHealth(oppositeDirection) != 0) {
+									optimalTile.damageWall(oppositeDirection);
+								}
+									
+								startedDamagingWall = true;
+							}else {
+								// If one of the tiles has rotated, reset and rethink
+								if (curTile.hasChanged()) {
+									curTile.reset();
+								}else if (optimalTile.hasChanged()) {
+									optimalTile.reset();
+								}
+								
+								startedDamagingWall = false;
+							}
+						}
 					}
 				}else {
-					// Find a closed wall to start breaking
-					var index:Number;
-					do {
-						index = Math.floor(Math.random() * openWalls.length);
-						var wallToDamage:Tile = openWalls[index];
-					}while (wallToDamage != null);
-					
-					// Find wall direction
-					var curTileDirection:String;
-					switch(index) {
-						case 0:
-							curTileDirection = "west";
-							break;
-						case 1:
-							curTileDirection = "east";
-							break;
-						case 2:
-							curTileDirection = "north";
-							break;
-						case 3:
-							curTileDirection = "south";
-							break;
-					}
-					
-					// Damage current wall, in a direction, not borders
-					if (board.isValidWall(curTile.getID(), curTileDirection)) {
-						// Get neighbor's opposite wall to damage
-						neighborTile = board.getNeighborTile(curTile.getID(), curTileDirection);
-						var oppositeDirection:String = board.getOppositeDirection(curTileDirection);
+					// Zombie is currently damaging a wall
+					// If the tiles have not rotated, continue to damage wall
+					if (!curTile.hasChanged() && !optimalTile.hasChanged()) {
+						trace("Zombie is damaging " + curTile.getID() + "'s " + optimalDirection + " wall and " +
+						optimalTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
 						
-						// Damage walls
-						neighborTile.damageWall(oppositeDirection);
-						curTile.damageWall(curTileDirection);
-						
-						trace("Zombie is damaging " + curTile.getID() + "'s " + curTileDirection + " wall and " +
-						neighborTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
-						
-						// Check for broken wall (tile type change)
-						if (curTile.getWallHealth(curTileDirection) == 0) {
-							trace("Wall broken - opening up a path between " + curTile.getID() + "'s " + curTileDirection + " wall and " + 
-							neighborTile.getID() + "'s " + oppositeDirection + "'s wall");
-							curTile.breakWall(curTileDirection);
-							neighborTile.breakWall(oppositeDirection);
+						// Damage only if it's not open
+						if (curTile.getWallHealth(optimalDirection) != 0) {
+							curTile.damageWall(optimalDirection);
 						}
+						
+						// Damage only if it's not open
+						if (optimalTile.getWallHealth(oppositeDirection) != 0) {
+							optimalTile.damageWall(oppositeDirection);
+						}
+						
+						// Check for broken neighboring wall
+						if (optimalTile.getWallHealth(oppositeDirection) == 0) {
+							trace("Tile " + optimalTile.getID() + "'s " + oppositeDirection + " wall is broken"); 
+							optimalTile.breakWall(oppositeDirection);
+						}
+						
+						// Check for broken current wall
+						if (curTile.getWallHealth(optimalDirection) == 0) {
+							trace("Tile " + curTile.getID() + "'s " + optimalDirection + " wall is broken"); 
+							curTile.breakWall(optimalDirection);
+						}
+						
+						// Stop damaging when both sides are broken or open
+						if (optimalTile.getWallHealth(oppositeDirection) == 0 &&
+							curTile.getWallHealth(optimalDirection) == 0) {
+							startedDamagingWall = false;
+						}
+					}else {
+						// Tiles have been rotated, stop and rethink
+						if (curTile.hasChanged()) {
+							curTile.reset();
+						}else if (optimalTile.hasChanged()) {
+							optimalTile.reset();
+						}
+						
+						startedDamagingWall = false;
 					}
 				}
 			}
@@ -193,8 +258,6 @@ package game
 			
 			path.reverse();
 			return path;
-		}
-		
+		}	
 	}
-
 }
