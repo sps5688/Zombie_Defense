@@ -6,7 +6,9 @@ package game
 	import game.Tile;
 	import game.Zombie;
 	import flash.utils.Timer;
+	import flash.events.Event;
 	import flash.events.TimerEvent;
+	import flash.events.KeyboardEvent;
 	
 	/**
 	 * ...
@@ -15,6 +17,7 @@ package game
 	 */
 	public class Gameplay 
 	{
+		public static const DEBUG:Boolean = false;
 		// Storage
 		private var gameOver:Boolean = false;
 		private var zombies:Array = new Array();
@@ -27,7 +30,7 @@ package game
 			zombies = new Array();
 		}
 		
-		public function moveEnemies(e:TimerEvent):void {
+		public function moveEnemies(e:Event):void {
 			// Move zombies to test path finding with tiles
 			for (var i:Number = 0; i < zombies.length; i++) {
 				var playerFound:Boolean = zombies[i].move(board);
@@ -36,8 +39,12 @@ package game
 					zombies.splice(i, 1);
 					trace("Player has died, game over");
 					gameOver = true;
-					enemyMovementTimer.stop();
-					enemyMovementTimer.removeEventListener(TimerEvent.TIMER, moveEnemies);
+					if ( DEBUG ) {
+						LayerManager.stage.removeEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
+					} else {
+						enemyMovementTimer.stop();
+						enemyMovementTimer.removeEventListener(TimerEvent.TIMER, moveEnemies);
+					}
 					break;
 				}
 			}
@@ -53,8 +60,12 @@ package game
 			zombies.push(new Zombie(1, board.getPlayerTile()));
 			
 			// Move enemies
-			enemyMovementTimer.addEventListener(TimerEvent.TIMER, moveEnemies);
-			enemyMovementTimer.start();
+			if( DEBUG ) {
+				LayerManager.stage.addEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
+			} else {
+				enemyMovementTimer.addEventListener(TimerEvent.TIMER, moveEnemies);
+				enemyMovementTimer.start();
+			}
 		}
 
 	}

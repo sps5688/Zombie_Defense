@@ -57,7 +57,7 @@ package game
 					}
 					break;
 				case "east":
-					if ((id + 1) / COLLUMNS != 0) {
+					if (id % COLLUMNS != COLLUMNS - 1) {
 						isValid = true;
 					}
 					break;

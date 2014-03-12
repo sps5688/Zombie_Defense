@@ -1,4 +1,5 @@
 package game {
+	import flash.text.TextField;
 	import lib.TileClip;
 	import lib.TileClipCross;
 	import lib.TileClipL;
@@ -24,11 +25,24 @@ package game {
 		public static const CROSS:String = "Cross";
 		public static const PLAYER:String = "Player";
 		
+		// spacing constants
 		public static const MARGIN:int = 25;
 		public static const SPACING:int = 5;
 		
-		//private var Prototile:Class;
+		// directions
+		public static const NORTH:String = "north";
+		public static const EAST:String = "east";
+		public static const SOUTH:String = "south";
+		public static const WEST:String = "west";
+		
+		// graphic
 		private var mc_tile:TileClip;
+		
+		// debug fields
+		private var northField:TextField = new TextField();
+		private var eastField:TextField = new TextField();
+		private var southField:TextField = new TextField();
+		private var westField:TextField = new TextField();
 		
 		// ID and type
 		private var id:Number;
@@ -94,6 +108,20 @@ package game {
 			}
 			setOrientation(Math.floor(Math.random() * 4));
 			addChild(mc_tile);
+			if( Gameplay.DEBUG ) {
+				northField.y = -63;
+				northField.selectable = false;
+				addChild(northField);
+				eastField.x = 55;
+				eastField.selectable = false;
+				addChild(eastField);
+				southField.y = 47;
+				southField.selectable = false;
+				addChild(southField);
+				westField.x = -63;
+				westField.selectable = false;
+				addChild(westField);
+			}
 			
 			// Add event listeners for rotation
 			addEventListener(MouseEvent.CLICK, rotateLeft);
@@ -110,6 +138,8 @@ package game {
 			healthEast = healthSouth;
 			healthSouth = healthWest;
 			healthWest = tmpN;
+			
+			updateDebugFields();
 		}
 
 		private function rotateRight(e:MouseEvent):void {
@@ -122,6 +152,8 @@ package game {
 			healthWest = healthSouth;
 			healthSouth = healthEast;
 			healthEast = tmpN;
+			
+			updateDebugFields();
 		}
 		
 		private function setOrientation(o:int):void {
@@ -134,6 +166,8 @@ package game {
 			healthSouth = dirs[(diff + 2) % 4];
 			healthWest = dirs[(diff + 3) % 4];
 			orientation = o;
+			
+			updateDebugFields();
 		}
 		
 		// GETTERS
@@ -167,107 +201,98 @@ package game {
 		}
 		
 		public function damageWall(wallToDamage:String):void {
-			var wallInt:int;
-			if (wallToDamage == "west") {
-				healthWest -= DAMAGE_INCREMENT;
-				trace( healthWest );
-				wallInt = 3;
-			}else if (wallToDamage == "east") {
-				healthEast -= DAMAGE_INCREMENT;
-				trace( healthEast );
-				wallInt = 1;
-			}else if (wallToDamage == "north") {
-				healthNorth -= DAMAGE_INCREMENT;
-				trace( healthNorth );
-				wallInt = 0;
-			}else {
-				healthSouth -= DAMAGE_INCREMENT;
-				trace( healthSouth );
-				wallInt = 2;
+			switch( wallToDamage ) {
+				case NORTH:
+					healthNorth -= DAMAGE_INCREMENT;
+					break;
+				case EAST:
+					healthEast -= DAMAGE_INCREMENT;
+					break;
+				case SOUTH:
+					healthSouth -= DAMAGE_INCREMENT;
+					break;
+				case WEST:
+					healthWest -= DAMAGE_INCREMENT;
+					break;
 			}
 			
-			wallInt = (4 + wallInt - orientation) % 4;
-			if (wallInt == 0 && mc_tile.getNorthWall() != null)
-				mc_tile.getNorthWall().nextFrame();
-			else if (wallInt == 1 &&  mc_tile.getEastWall() != null)
-				mc_tile.getEastWall().nextFrame();
-			else if (wallInt == 2 && mc_tile.getSouthWall() != null)
-				mc_tile.getSouthWall().nextFrame();
-			else if (wallInt == 3 && mc_tile.getWestWall() != null)
-				mc_tile.getWestWall().nextFrame();
+			//TODO move this to a separate function
+			switch( globalToLocalDir( wallToDamage ) ) {
+				case NORTH:
+					if ( mc_tile.getNorthWall() != null ) mc_tile.getNorthWall().nextFrame();
+					break;
+				case EAST:
+					if ( mc_tile.getEastWall() != null ) mc_tile.getEastWall().nextFrame();
+					break;
+				case SOUTH:
+					if ( mc_tile.getSouthWall() != null ) mc_tile.getSouthWall().nextFrame();
+					break;
+				case WEST:
+					if ( mc_tile.getWestWall() != null ) mc_tile.getWestWall().nextFrame();
+					break;
+					
+			}
+
+			updateDebugFields();
 		}
 		
 		public function getWallHealth(wall:String):Number {
-			switch (wall) {
-				case "west":
-					return healthWest;
-					break;
-				case "east":
-					return healthEast;
-					break;
-				case "north":
-					return healthNorth;
-					break;
-				case "south":
-					return healthSouth;
-					break;
-				default:
-					break;
-			}
-			return 0;
+			return NORTH == wall ? healthNorth :
+				   EAST == wall ? healthEast :
+				   SOUTH == wall ? healthSouth :
+				   WEST == wall ? healthWest : 0;
 		}
 		
 		public function setWallHealth(wall:String, health:Number):void {
 			switch (wall) {
-				case "west":
-					healthWest = health;
-					break;
-				case "east":
-					healthEast = health;
-					break;
-				case "north":
+				case NORTH:
 					healthNorth = health;
 					break;
-				case "south":
+				case EAST:
+					healthEast = health;
+					break;
+				case SOUTH:
 					healthSouth = health;
+					break;
+				case WEST:
+					healthWest = health;
 					break;
 				default:
 					break;
 			}
+			updateDebugFields();
 		}
 		
 		public function breakWall(wall:String):void {
-			var wallInt:int;
-			switch (wall) {
-				case "west":
-					wallInt = 3;
-					//healthWest = INIT_HEALTH;
+			switch( globalToLocalDir( wall ) ) {
+				case NORTH:
+					if ( mc_tile.getNorthWall() != null ) mc_tile.getNorthWall().play();
 					break;
-				case "east":
-					wallInt = 1;
-					//healthEast = INIT_HEALTH;
+				case EAST:
+					if ( mc_tile.getEastWall() != null ) mc_tile.getEastWall().play();
 					break;
-				case "north":
-					wallInt = 0;
-					//healthNorth = INIT_HEALTH;
+				case SOUTH:
+					if ( mc_tile.getSouthWall() != null ) mc_tile.getSouthWall().play();
 					break;
-				case "south":
-					wallInt = 2;
-					//healthSouth = INIT_HEALTH;
-					break;
-				default:
+				case WEST:
+					if ( mc_tile.getWestWall() != null ) mc_tile.getWestWall().play();
 					break;
 			}
-			
-			wallInt = (4 + wallInt - orientation) % 4;
-			if (wallInt == 0 && mc_tile.getNorthWall() != null)
-				mc_tile.getNorthWall().play();
-			else if (wallInt == 1 &&  mc_tile.getEastWall() != null)
-				mc_tile.getEastWall().play();
-			else if (wallInt == 2 && mc_tile.getSouthWall() != null)
-				mc_tile.getSouthWall().play();
-			else if (wallInt == 3 && mc_tile.getWestWall() != null)
-				mc_tile.getWestWall().play();
+			updateDebugFields();
+		}
+		
+		private function globalToLocalDir( globalDir:String ) : String {
+			var dirs:Array = new Array( NORTH, EAST, SOUTH, WEST );
+			var dirInt:int = dirs.indexOf( globalDir );
+			dirInt = (4 + dirInt - orientation) % 4;
+			return dirs[dirInt];
+		}
+		
+		private function updateDebugFields() : void {
+			northField.text = ""+healthNorth;
+			eastField.text = ""+healthEast;
+			southField.text = ""+healthSouth;
+			westField.text = ""+healthWest;
 		}
 		
 	}
