@@ -212,36 +212,35 @@ package game {
 		}
 		
 		public function damageWall(wallToDamage:String):void {
+			var destroyed:Boolean = false;
 			switch( wallToDamage ) {
 				case NORTH:
+					if ( healthNorth <= 0 ) return;
 					healthNorth -= DAMAGE_INCREMENT;
+					destroyed = healthNorth <= 0;
 					break;
 				case EAST:
+					if ( healthEast <= 0 ) return;
 					healthEast -= DAMAGE_INCREMENT;
+					destroyed = healthEast <= 0;
 					break;
 				case SOUTH:
+					if ( healthSouth <= 0 ) return;
 					healthSouth -= DAMAGE_INCREMENT;
+					destroyed = healthSouth <= 0;
 					break;
 				case WEST:
+					if ( healthWest <= 0 ) return;
 					healthWest -= DAMAGE_INCREMENT;
+					destroyed = healthWest;
 					break;
 			}
-			
-			//TODO move this to a separate function
-			switch( globalToLocalDir( wallToDamage ) ) {
-				case NORTH:
-					if ( mc_tile.getNorthWall() != null ) mc_tile.getNorthWall().nextFrame();
-					break;
-				case EAST:
-					if ( mc_tile.getEastWall() != null ) mc_tile.getEastWall().nextFrame();
-					break;
-				case SOUTH:
-					if ( mc_tile.getSouthWall() != null ) mc_tile.getSouthWall().nextFrame();
-					break;
-				case WEST:
-					if ( mc_tile.getWestWall() != null ) mc_tile.getWestWall().nextFrame();
-					break;
-					
+			var wallClip:MovieClip = getWallClip( wallToDamage );
+			if ( wallClip != null ) {
+				if ( destroyed )
+					wallClip.play();
+				else
+					wallClip.nextFrame();
 			}
 
 			updateDebugFields();
@@ -274,29 +273,25 @@ package game {
 			updateDebugFields();
 		}
 		
-		public function breakWall(wall:String):void {
-			switch( globalToLocalDir( wall ) ) {
-				case NORTH:
-					if ( mc_tile.getNorthWall() != null ) mc_tile.getNorthWall().play();
-					break;
-				case EAST:
-					if ( mc_tile.getEastWall() != null ) mc_tile.getEastWall().play();
-					break;
-				case SOUTH:
-					if ( mc_tile.getSouthWall() != null ) mc_tile.getSouthWall().play();
-					break;
-				case WEST:
-					if ( mc_tile.getWestWall() != null ) mc_tile.getWestWall().play();
-					break;
-			}
-			updateDebugFields();
-		}
-		
 		private function globalToLocalDir( globalDir:String ) : String {
 			var dirs:Array = new Array( NORTH, EAST, SOUTH, WEST );
 			var dirInt:int = dirs.indexOf( globalDir );
 			dirInt = (4 + dirInt - orientation) % 4;
 			return dirs[dirInt];
+		}
+		
+		private function getWallClip( dir:String ) : MovieClip {
+			switch( globalToLocalDir( dir ) ) {
+				case NORTH:
+					return mc_tile.getNorthWall();
+				case EAST:
+					return mc_tile.getEastWall();
+				case SOUTH:
+					return mc_tile.getSouthWall();
+				case WEST:
+					return mc_tile.getWestWall();
+			}
+			return null;
 		}
 		
 		private function updateDebugFields() : void {

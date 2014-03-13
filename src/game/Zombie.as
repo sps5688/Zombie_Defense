@@ -168,18 +168,6 @@ package game
 							optimalTile.damageWall(oppositeDirection);
 						}
 						
-						// Check for broken neighboring wall
-						if (optimalTile.getWallHealth(oppositeDirection) == 0) {
-							trace("Tile " + optimalTile.getID() + "'s " + oppositeDirection + " wall is broken"); 
-							optimalTile.breakWall(oppositeDirection);
-						}
-						
-						// Check for broken current wall
-						if (curTile.getWallHealth(optimalDirection) == 0) {
-							trace("Tile " + curTile.getID() + "'s " + optimalDirection + " wall is broken"); 
-							curTile.breakWall(optimalDirection);
-						}
-						
 						// Stop damaging when both sides are broken or open
 						if (optimalTile.getWallHealth(oppositeDirection) == 0 &&
 							curTile.getWallHealth(optimalDirection) == 0) {
