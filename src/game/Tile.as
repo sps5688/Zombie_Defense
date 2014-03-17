@@ -8,7 +8,6 @@ package game {
 	import lib.TileClipPlayer;
 	import flash.display.MovieClip;
 	import flash.events.MouseEvent;
-	import ZombieDefense_fla.TileStraight_2;
 	
 	/**
 	 * ...
@@ -232,7 +231,7 @@ package game {
 				case WEST:
 					if ( healthWest <= 0 ) return;
 					healthWest -= DAMAGE_INCREMENT;
-					destroyed = healthWest;
+					destroyed = healthWest <= 0;
 					break;
 			}
 			var wallClip:MovieClip = getWallClip( wallToDamage );

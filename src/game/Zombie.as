@@ -40,11 +40,12 @@ package game
 			this.y = 90 + 130 * Board.getTileY(location);
 		}
 		
-		public function move(board:Board):Boolean {
+		public function move(board:Board, playerLocation:Number):Boolean {
 			var tileGrid:Array = board.getTileGrid();
 			var curTile:Tile = tileGrid[location];
 			var neighborTile:Tile;
 			var neighborTileIndex:Number;
+			this.playerLocation = playerLocation;
 			
 			// Determine if there's a path to the player
 			var path:Array = search(curTile, board);
@@ -59,13 +60,13 @@ package game
 				curTile.setZombieOn(false);
 				
 				// Check for player death
-				if (location == board.getPlayerTile()) {
+				if (location == playerLocation) {
 					trace("MMMM PLAYER, removed zombie");
 					return true;
 				}
 			}else {
 				// No path to player, determine optimal tile to move to
-				var optimalDirection:String = board.getOptimalDirection(location);
+				var optimalDirection:String = getOptimalDirection(board);
 				var optimalTile:Tile;
 				var oppositeDirection:String = board.getOppositeDirection(optimalDirection);
 				
@@ -187,6 +188,42 @@ package game
 			}
 			// Player not found
 			return false;
+		}
+		
+		public function getOptimalDirection(board:Board):String {
+			var optimalDirection:String = "south";
+			var minDistance:Number = 100;
+			
+			var eastDist:Number = Math.abs(playerLocation - (location + 1));
+			var westDist:Number = Math.abs(playerLocation - (location - 1));
+			var northDist:Number = Math.abs(playerLocation - (location - board.getColumns()));
+			var southDist:Number = Math.abs(playerLocation - (location + board.getColumns()));
+			
+			if (eastDist < minDistance) {
+				// East
+				minDistance = eastDist;
+				optimalDirection = "east";
+			}
+						
+			if (westDist < minDistance) {
+				// West
+				minDistance = westDist;
+				optimalDirection = "west";
+			}
+			
+			if (northDist < minDistance) {
+				// North
+				minDistance = northDist;
+				optimalDirection = "north";
+			}
+			
+			if (southDist < minDistance) {
+				// South
+				minDistance = southDist
+				optimalDirection = "south";
+			}
+			
+			return optimalDirection;
 		}
 		
 		public function search(sourceTile:Tile, board:Board):Array {

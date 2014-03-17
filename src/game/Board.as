@@ -14,17 +14,17 @@ package game
 	public class Board {
 		// Board info
 		private var ROWS:Number = 5;
-		private var COLLUMNS:Number = 5;
-		private var PLAYER_TILE:Number = 12;
+		private var COLUMNS:Number = 5;
+		//private var PLAYER_TILE:Number = 12;
 		
 		private var TILE_TYPES:Array = new Array(Tile.T_SHAPE, Tile.L_SHAPE, Tile.STRAIGHT);
 		private var tiles:Array = new Array();
 		
 		public function Board() {
 			for (var i:Number = 0; i < ROWS; i++) {
-				for (var j:Number = 0; j < COLLUMNS; j++) {
-					var id:Number = i * COLLUMNS  + j
-					var tileType:String = (i == 2 && j == 2) ? Tile.PLAYER :
+				for (var j:Number = 0; j < COLUMNS; j++) {
+					var id:Number = i * COLUMNS  + j
+					var tileType:String = (i == 2 && j == 2) ? Tile.CROSS :
 						TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
 					
 					// Create tile and add to array
@@ -48,22 +48,22 @@ package game
 			
 			switch(direction) {
 				case "west":
-					if (id % COLLUMNS != 0) {
+					if (id % COLUMNS != 0) {
 						isValid = true;
 					}
 					break;
 				case "east":
-					if (id % COLLUMNS != COLLUMNS - 1) {
+					if (id % COLUMNS != COLUMNS - 1) {
 						isValid = true;
 					}
 					break;
 				case "north":
-					if (id >= COLLUMNS) {
+					if (id >= COLUMNS) {
 						isValid = true;
 					}
 					break;
 				case "south":
-					if (id < ((COLLUMNS * COLLUMNS) - COLLUMNS)) {
+					if (id < ((COLUMNS * ROWS) - COLUMNS)) {
 						isValid = true;
 					}
 					break;
@@ -83,9 +83,9 @@ package game
 				direction = "west";
 			}else if (neighborTileID == curTileID + 1) {
 				direction = "east";
-			}else if (neighborTileID == curTileID - COLLUMNS) {
+			}else if (neighborTileID == curTileID - COLUMNS) {
 				direction = "north";
-			}else if (neighborTileID == curTileID + COLLUMNS) {
+			}else if (neighborTileID == curTileID + COLUMNS) {
 				direction = "south";
 			}
 			
@@ -108,12 +108,12 @@ package game
 					break;
 				case "north":
 					if (isValidWall(curTileID, direction)) {
-						neighborTile = tiles[curTileID - COLLUMNS];
+						neighborTile = tiles[curTileID - COLUMNS];
 					}
 					break;
 				case "south":
 					if (isValidWall(curTileID, direction)) {
-						neighborTile = tiles[curTileID + COLLUMNS];
+						neighborTile = tiles[curTileID + COLUMNS];
 					}
 					break;
 				default:
@@ -152,7 +152,7 @@ package game
 			
 			// WEST
 			if (tile.getWestWall() && isValidWall(id, "west")) {
-				// Not left collumn
+				// Not left column
 				// Get west tile
 				paths.push(tiles[id - 1]);
 			}else {
@@ -161,7 +161,7 @@ package game
 			
 			// EAST
 			if (tile.getEastWall() && isValidWall(id, "east")) {
-				// Not right collumn
+				// Not right column
 				// Get east tile
 				paths.push(tiles[id + 1]);
 			}else {
@@ -172,7 +172,7 @@ package game
 			if (tile.getNorthWall() && isValidWall(id, "north")) {
 				// Not top row
 				// Get north tile
-				paths.push(tiles[id - COLLUMNS]);
+				paths.push(tiles[id - COLUMNS]);
 			}else {
 				paths.push(null);
 			}
@@ -181,7 +181,7 @@ package game
 			if (tile.getSouthWall() && isValidWall(id, "south")) {
 				// Not bottom row
 				// Get south tile
-				paths.push(tiles[id + COLLUMNS]);
+				paths.push(tiles[id + COLUMNS]);
 			}else {
 				paths.push(null);
 			}
@@ -218,49 +218,18 @@ package game
 			return validMove;
 		}
 		
-		public function getOptimalDirection(location:Number):String {
-			var optimalDirection:String = "south";
-			var minDistance:Number = 100;
-			
-			var eastDist:Number = Math.abs(PLAYER_TILE - (location + 1));
-			var westDist:Number = Math.abs(PLAYER_TILE - (location - 1));
-			var northDist:Number = Math.abs(PLAYER_TILE - (location - COLLUMNS));
-			var southDist:Number = Math.abs(PLAYER_TILE - (location + COLLUMNS));
-			
-			if (eastDist < minDistance) {
-				// East
-				minDistance = eastDist;
-				optimalDirection = "east";
-			}
-						
-			if (westDist < minDistance) {
-				// West
-				minDistance = westDist;
-				optimalDirection = "west";
-			}
-			
-			if (northDist < minDistance) {
-				// North
-				minDistance = northDist;
-				optimalDirection = "north";
-			}
-			
-			if (southDist < minDistance) {
-				// South
-				minDistance = southDist
-				optimalDirection = "south";
-			}
-			
-			return optimalDirection;
-		}
-		
+		/*
 		public function getPlayerTile():Number {
 			return PLAYER_TILE;
 		}
-		
+		*/
 		public function getTile(index:Number):Tile {
 			return tiles[index];
 		}
+		
+		public function getColumns():Number { return COLUMNS; }
+		
+		public function getRows():Number { return ROWS; }
 		
 		public static function getTileX(id:Number):int{
 			return id % 5;
