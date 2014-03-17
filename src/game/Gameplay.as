@@ -69,6 +69,7 @@ package game
 			mc_player.x = 90 + 130 * Board.getTileX(playerLoc);
 			mc_player.y = 90 + 130 * Board.getTileY(playerLoc);
 			LayerManager.addToLayer(mc_player, Global.LAYER_ENTITIES);
+			board.getTile(playerLoc).setOccupied(true);
 			
 			// init controls
 			EventUtils.safeAddListener(LayerManager.stage, KeyboardEvent.KEY_DOWN, onKeyDown);
@@ -77,7 +78,7 @@ package game
 			// For now, need to spawn a zombie in a static location to test pathfinding
 			zombies.push(new Zombie(23, playerLoc));
 			var tile:Tile = board.getTile(23);
-			tile.setZombieOn(true);
+			tile.setOccupied(true);
 			
 			// Move enemies
 			if( DEBUG ) {
@@ -97,6 +98,8 @@ package game
 					if (theTile.getWallHealth("north") <= 0 && northTile.getWallHealth("south") <= 0) { //is there a path
 						playerLoc = playerLoc - board.getColumns();
 						setPlayerLocation(playerLoc);
+						theTile.setOccupied(false);
+						board.getTile(playerLoc).setOccupied(true);
 					}
 				}
 			}
@@ -106,6 +109,8 @@ package game
 					if (theTile.getWallHealth("south") <= 0 && southTile.getWallHealth("north") <= 0) { //is there a path
 						playerLoc = playerLoc + board.getColumns();
 						setPlayerLocation(playerLoc);
+						theTile.setOccupied(false);
+						board.getTile(playerLoc).setOccupied(true);
 					}
 				}
 			}
@@ -115,6 +120,8 @@ package game
 					if (theTile.getWallHealth("west") <= 0 && westTile.getWallHealth("east") <= 0) { //is there a path
 						playerLoc = playerLoc - 1;
 						setPlayerLocation(playerLoc);
+						theTile.setOccupied(false);
+						board.getTile(playerLoc).setOccupied(true);
 					}
 				}
 			}
@@ -124,6 +131,8 @@ package game
 					if (theTile.getWallHealth("east") <= 0 && eastTile.getWallHealth("west") <= 0) { //is there a path
 						playerLoc = playerLoc + 1;
 						setPlayerLocation(playerLoc);
+						theTile.setOccupied(false);
+						board.getTile(playerLoc).setOccupied(true);
 					}
 				}
 			}

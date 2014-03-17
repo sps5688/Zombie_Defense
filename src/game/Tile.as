@@ -308,7 +308,7 @@ package game {
 			changed = false;
 		}
 		
-		public function setZombieOn(on:Boolean):void {
+		public function setOccupied(on:Boolean):void {
 			containsZombie = on;
 		}
 		

@@ -56,8 +56,8 @@ package game
 				setLocation(neighborTile.getID());
 				
 				// Update tiles
-				neighborTile.setZombieOn(true);
-				curTile.setZombieOn(false);
+				neighborTile.setOccupied(true);
+				curTile.setOccupied(false);
 				
 				// Check for player death
 				if (location == playerLocation) {
@@ -104,8 +104,8 @@ package game
 							setLocation(optimalTile.getID());
 							
 							// Update tiles
-							optimalTile.setZombieOn(true);
-							curTile.setZombieOn(false);
+							optimalTile.setOccupied(true);
+							curTile.setOccupied(false);
 							
 							zombieMoved = true;
 						}else {
