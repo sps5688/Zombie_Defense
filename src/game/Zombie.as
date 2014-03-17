@@ -18,6 +18,7 @@ package game
 		private var startedDamagingWall:Boolean = false;
 		private var zombieMoved:Boolean = false;
 		private var pursueOptimal:Boolean = false;
+		private var previousPosition:Number;
 		
 		public function Zombie(location:Number, playerLocation:Number) {
 			//add movieclip to stage
@@ -27,6 +28,7 @@ package game
 			this.y = 90 + 130 * Board.getTileY(location);
 			LayerManager.addToLayer(this, Global.LAYER_ENTITIES);
 			this.location = location;
+			previousPosition = location;
 			this.playerLocation = playerLocation;
 		}
 		
@@ -35,6 +37,7 @@ package game
 		}
 		
 		public function setLocation(location:Number):void {
+			previousPosition = this.location;
 			this.location = location;
 			this.x = 90 + 130 * Board.getTileX(location);
 			this.y = 90 + 130 * Board.getTileY(location);
@@ -66,7 +69,7 @@ package game
 				}
 			}else {
 				// No path to player, determine optimal tile to move to
-				var optimalDirection:String = getOptimalDirection(board);
+				var optimalDirection:String = getOptimalDirection(board, playerLocation);
 				var optimalTile:Tile;
 				var oppositeDirection:String = board.getOppositeDirection(optimalDirection);
 				
@@ -190,39 +193,40 @@ package game
 			return false;
 		}
 		
-		public function getOptimalDirection(board:Board):String {
+		public function getOptimalDirection(board:Board, destination:Number):String {
 			var optimalDirection:String = "south";
 			var minDistance:Number = 100;
 			
-			var eastDist:Number = Math.abs(playerLocation - (location + 1));
-			var westDist:Number = Math.abs(playerLocation - (location - 1));
-			var northDist:Number = Math.abs(playerLocation - (location - board.getColumns()));
-			var southDist:Number = Math.abs(playerLocation - (location + board.getColumns()));
-			
-			if (eastDist < minDistance) {
+			var eastDist:Number = Math.abs(destination - (location + 1));
+			var westDist:Number = Math.abs(destination - (location - 1));
+			var northDist:Number = Math.abs(destination - (location - board.getColumns()));
+			var southDist:Number = Math.abs(destination - (location + board.getColumns()));
+
+			if (eastDist < minDistance && board.isValidWall(location, "east")) {
 				// East
 				minDistance = eastDist;
 				optimalDirection = "east";
 			}
 						
-			if (westDist < minDistance) {
+			if (westDist < minDistance && board.isValidWall(location, "west")) {
 				// West
 				minDistance = westDist;
 				optimalDirection = "west";
 			}
 			
-			if (northDist < minDistance) {
+			if (northDist < minDistance && board.isValidWall(location, "north")) {
 				// North
 				minDistance = northDist;
 				optimalDirection = "north";
 			}
 			
-			if (southDist < minDistance) {
+			if (southDist < minDistance && board.isValidWall(location, "south")) {
 				// South
 				minDistance = southDist
 				optimalDirection = "south";
+				
 			}
-			
+
 			return optimalDirection;
 		}
 		
