@@ -31,6 +31,7 @@ package game
 		private var mc_player:MovieClip;
 		
 		private var enemyMovementTimer:Timer = new Timer(2000);
+		private var enemySpawnTimer:Timer = new Timer (15 * 1000);
 		
 		public function Gameplay() 
 		{
@@ -38,21 +39,36 @@ package game
 		}
 		
 		public function moveEnemies(e:Event):void {
-			// Move zombies to test path finding with tiles
-			for (var i:Number = 0; i < zombies.length; i++) {
-				var playerFound:Boolean = zombies[i].move(board, playerLoc);
-				
-				if (playerFound) {
-					zombies.splice(i, 1);
-					trace("Player has died, game over");
-					gameOver = true;
-					if ( DEBUG ) {
-						LayerManager.stage.removeEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
-					} else {
-						enemyMovementTimer.stop();
-						enemyMovementTimer.removeEventListener(TimerEvent.TIMER, moveEnemies);
+			if (!gameOver){
+				// Move zombies to test path finding with tiles
+				for (var i:Number = 0; i < zombies.length; i++) {
+					var playerFound:Boolean = zombies[i].move(board, playerLoc);
+					
+					if (playerFound) {
+						zombies.splice(i, 1);
+						trace("Player has died, game over");
+						gameOver = true;
+						if ( DEBUG ) {
+							LayerManager.stage.removeEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
+						} else {
+							enemyMovementTimer.stop();
+							enemyMovementTimer.removeEventListener(TimerEvent.TIMER, moveEnemies);
+						}
+						break;
 					}
-					break;
+				}
+			}
+		}
+		
+		private function spawnEnemies(e:TimerEvent):void {
+			if (!gameOver) {
+				for (var i:Number = 0; i < board.getColumns() * board.getRows(); i++ ) {
+					var theTile:Tile = board.getTile(i);
+					if (!theTile.isOccupied()) {
+						zombies.push(new Zombie(i, playerLoc));
+						theTile.setOccupied(true);
+						break;
+					}
 				}
 			}
 		}
@@ -80,6 +96,10 @@ package game
 			var tile:Tile = board.getTile(23);
 			tile.setOccupied(true);
 			
+			// init zombie spawner
+			enemySpawnTimer.addEventListener(TimerEvent.TIMER, spawnEnemies);
+			enemySpawnTimer.start();
+			
 			// Move enemies
 			if( DEBUG ) {
 				LayerManager.stage.addEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
@@ -90,49 +110,51 @@ package game
 		}
 		
 		private function onKeyDown(e:KeyboardEvent):void {
-			var key:uint = e.keyCode;
-			var theTile:Tile = board.getTile(playerLoc);
-			if (key == Keyboard.W || key == Keyboard.UP) {
-				if (board.isValidWall(playerLoc, "north")) { //edge check
-					var northTile:Tile = board.getTile(playerLoc - board.getColumns());
-					if (theTile.getWallHealth("north") <= 0 && northTile.getWallHealth("south") <= 0) { //is there a path
-						playerLoc = playerLoc - board.getColumns();
-						setPlayerLocation(playerLoc);
-						theTile.setOccupied(false);
-						board.getTile(playerLoc).setOccupied(true);
+			if (!gameOver){
+				var key:uint = e.keyCode;
+				var theTile:Tile = board.getTile(playerLoc);
+				if (key == Keyboard.W || key == Keyboard.UP) {
+					if (board.isValidWall(playerLoc, "north")) { //edge check
+						var northTile:Tile = board.getTile(playerLoc - board.getColumns());
+						if (theTile.getWallHealth("north") <= 0 && northTile.getWallHealth("south") <= 0) { //is there a path
+							playerLoc = playerLoc - board.getColumns();
+							setPlayerLocation(playerLoc);
+							theTile.setOccupied(false);
+							board.getTile(playerLoc).setOccupied(true);
+						}
 					}
 				}
-			}
-			if (key == Keyboard.S || key == Keyboard.DOWN) {
-				if (board.isValidWall(playerLoc, "south")) { //edge check
-					var southTile:Tile = board.getTile(playerLoc + board.getColumns());
-					if (theTile.getWallHealth("south") <= 0 && southTile.getWallHealth("north") <= 0) { //is there a path
-						playerLoc = playerLoc + board.getColumns();
-						setPlayerLocation(playerLoc);
-						theTile.setOccupied(false);
-						board.getTile(playerLoc).setOccupied(true);
+				if (key == Keyboard.S || key == Keyboard.DOWN) {
+					if (board.isValidWall(playerLoc, "south")) { //edge check
+						var southTile:Tile = board.getTile(playerLoc + board.getColumns());
+						if (theTile.getWallHealth("south") <= 0 && southTile.getWallHealth("north") <= 0) { //is there a path
+							playerLoc = playerLoc + board.getColumns();
+							setPlayerLocation(playerLoc);
+							theTile.setOccupied(false);
+							board.getTile(playerLoc).setOccupied(true);
+						}
 					}
 				}
-			}
-			if (key == Keyboard.A || key == Keyboard.LEFT) {
-				if (board.isValidWall(playerLoc, "west")) { //edge check
-					var westTile:Tile = board.getTile(playerLoc - 1);
-					if (theTile.getWallHealth("west") <= 0 && westTile.getWallHealth("east") <= 0) { //is there a path
-						playerLoc = playerLoc - 1;
-						setPlayerLocation(playerLoc);
-						theTile.setOccupied(false);
-						board.getTile(playerLoc).setOccupied(true);
+				if (key == Keyboard.A || key == Keyboard.LEFT) {
+					if (board.isValidWall(playerLoc, "west")) { //edge check
+						var westTile:Tile = board.getTile(playerLoc - 1);
+						if (theTile.getWallHealth("west") <= 0 && westTile.getWallHealth("east") <= 0) { //is there a path
+							playerLoc = playerLoc - 1;
+							setPlayerLocation(playerLoc);
+							theTile.setOccupied(false);
+							board.getTile(playerLoc).setOccupied(true);
+						}
 					}
 				}
-			}
-			if (key == Keyboard.D || key == Keyboard.RIGHT) {
-				if (board.isValidWall(playerLoc, "east")) { //edge check
-					var eastTile:Tile = board.getTile(playerLoc + 1);
-					if (theTile.getWallHealth("east") <= 0 && eastTile.getWallHealth("west") <= 0) { //is there a path
-						playerLoc = playerLoc + 1;
-						setPlayerLocation(playerLoc);
-						theTile.setOccupied(false);
-						board.getTile(playerLoc).setOccupied(true);
+				if (key == Keyboard.D || key == Keyboard.RIGHT) {
+					if (board.isValidWall(playerLoc, "east")) { //edge check
+						var eastTile:Tile = board.getTile(playerLoc + 1);
+						if (theTile.getWallHealth("east") <= 0 && eastTile.getWallHealth("west") <= 0) { //is there a path
+							playerLoc = playerLoc + 1;
+							setPlayerLocation(playerLoc);
+							theTile.setOccupied(false);
+							board.getTile(playerLoc).setOccupied(true);
+						}
 					}
 				}
 			}
@@ -142,6 +164,13 @@ package game
 			playerLoc = newLoc;
 			mc_player.x = 90 + 130 * Board.getTileX(newLoc);
 			mc_player.y = 90 + 130 * Board.getTileY(newLoc);
+			for (var i:Number = 0; i < zombies.length; i++) {
+				var theZombie:Zombie = zombies[i];
+				if (theZombie.getLocation() == playerLoc) {
+					gameOver = true;
+					trace("Player ran into the zombie, game over");
+				}
+			}
 		}
 
 	}

@@ -312,6 +312,10 @@ package game {
 			containsZombie = on;
 		}
 		
+		public function isOccupied():Boolean {
+			return containsZombie;
+		}
+		
 	}
 
 }

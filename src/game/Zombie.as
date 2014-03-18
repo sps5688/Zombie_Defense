@@ -36,11 +36,13 @@ package game
 			return location;
 		}
 		
-		public function setLocation(location:Number):void {
-			previousPosition = this.location;
-			this.location = location;
-			this.x = 90 + 130 * Board.getTileX(location);
-			this.y = 90 + 130 * Board.getTileY(location);
+		public function setLocation(location:Number, board:Board):void {
+			if (!board.getTile(location).isOccupied() || location == playerLocation) {
+				previousPosition = this.location;
+				this.location = location;
+				this.x = 90 + 130 * Board.getTileX(location);
+				this.y = 90 + 130 * Board.getTileY(location);
+			}
 		}
 		
 		public function move(board:Board, playerLocation:Number):Boolean {
@@ -56,7 +58,7 @@ package game
 				// If there is a path, move zombie to next tile
 				neighborTile = path.shift();
 				trace("Moving zombie " + " from " + curTile.getID() + " to " + neighborTile.getID() + " - there is a path");
-				setLocation(neighborTile.getID());
+				setLocation(neighborTile.getID(), board);
 				
 				// Update tiles
 				neighborTile.setOccupied(true);
@@ -104,7 +106,7 @@ package game
 						// If the zombie can move to it, move there
 						if (neighborOpen && currentOpen) {
 							trace("Moving zombie " + " from " + curTile.getID() + " to " + optimalTile.getID() + " - there is not a path");
-							setLocation(optimalTile.getID());
+							setLocation(optimalTile.getID(), board);
 							
 							// Update tiles
 							optimalTile.setOccupied(true);
