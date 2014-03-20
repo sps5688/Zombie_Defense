@@ -53,8 +53,8 @@ package game {
 		private var orientation:int;
 		
 		// Wall health
-		private var INIT_HEALTH:Number = 3;
-		private var DAMAGE_INCREMENT:Number = 1;
+		private static const INIT_HEALTH:Number = 300;
+		private static const DAMAGE_INCREMENT:Number = 1;
 		private var healthWest:Number = INIT_HEALTH;
 		private var healthEast:Number = INIT_HEALTH;
 		private var healthNorth:Number = INIT_HEALTH;
@@ -211,34 +211,34 @@ package game {
 		}
 		
 		public function damageWall(wallToDamage:String):void {
-			var destroyed:Boolean = false;
+			var health:Number = INIT_HEALTH;
 			switch( wallToDamage ) {
 				case NORTH:
 					if ( healthNorth <= 0 ) return;
 					healthNorth -= DAMAGE_INCREMENT;
-					destroyed = healthNorth <= 0;
+					health = healthNorth;
 					break;
 				case EAST:
 					if ( healthEast <= 0 ) return;
 					healthEast -= DAMAGE_INCREMENT;
-					destroyed = healthEast <= 0;
+					health = healthEast;
 					break;
 				case SOUTH:
 					if ( healthSouth <= 0 ) return;
 					healthSouth -= DAMAGE_INCREMENT;
-					destroyed = healthSouth <= 0;
+					health = healthSouth;
 					break;
 				case WEST:
 					if ( healthWest <= 0 ) return;
 					healthWest -= DAMAGE_INCREMENT;
-					destroyed = healthWest <= 0;
+					health = healthWest;
 					break;
 			}
 			var wallClip:MovieClip = getWallClip( wallToDamage );
 			if ( wallClip != null ) {
-				if ( destroyed )
+				if ( health <= 0 )
 					wallClip.play();
-				else
+				else if ( health % (INIT_HEALTH/10) == 0 ) 
 					wallClip.nextFrame();
 			}
 

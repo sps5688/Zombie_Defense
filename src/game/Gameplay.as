@@ -30,7 +30,7 @@ package game
 		private var playerSpeed:Number;
 		private var mc_player:MovieClip;
 		
-		private var enemyMovementTimer:Timer = new Timer(2000);
+		private var enemyMovementTimer:Timer = new Timer(20);
 		private var enemySpawnTimer:Timer = new Timer (15 * 1000);
 		
 		public function Gameplay() 
@@ -117,10 +117,7 @@ package game
 					if (board.isValidWall(playerLoc, "north")) { //edge check
 						var northTile:Tile = board.getTile(playerLoc - board.getColumns());
 						if (theTile.getWallHealth("north") <= 0 && northTile.getWallHealth("south") <= 0) { //is there a path
-							playerLoc = playerLoc - board.getColumns();
-							setPlayerLocation(playerLoc);
-							theTile.setOccupied(false);
-							board.getTile(playerLoc).setOccupied(true);
+							setPlayerLocation(playerLoc - board.getColumns());
 						}
 					}
 				}
@@ -128,10 +125,7 @@ package game
 					if (board.isValidWall(playerLoc, "south")) { //edge check
 						var southTile:Tile = board.getTile(playerLoc + board.getColumns());
 						if (theTile.getWallHealth("south") <= 0 && southTile.getWallHealth("north") <= 0) { //is there a path
-							playerLoc = playerLoc + board.getColumns();
-							setPlayerLocation(playerLoc);
-							theTile.setOccupied(false);
-							board.getTile(playerLoc).setOccupied(true);
+							setPlayerLocation(playerLoc + board.getColumns());
 						}
 					}
 				}
@@ -139,10 +133,7 @@ package game
 					if (board.isValidWall(playerLoc, "west")) { //edge check
 						var westTile:Tile = board.getTile(playerLoc - 1);
 						if (theTile.getWallHealth("west") <= 0 && westTile.getWallHealth("east") <= 0) { //is there a path
-							playerLoc = playerLoc - 1;
-							setPlayerLocation(playerLoc);
-							theTile.setOccupied(false);
-							board.getTile(playerLoc).setOccupied(true);
+							setPlayerLocation(playerLoc - 1);
 						}
 					}
 				}
@@ -150,10 +141,7 @@ package game
 					if (board.isValidWall(playerLoc, "east")) { //edge check
 						var eastTile:Tile = board.getTile(playerLoc + 1);
 						if (theTile.getWallHealth("east") <= 0 && eastTile.getWallHealth("west") <= 0) { //is there a path
-							playerLoc = playerLoc + 1;
-							setPlayerLocation(playerLoc);
-							theTile.setOccupied(false);
-							board.getTile(playerLoc).setOccupied(true);
+							setPlayerLocation(playerLoc + 1);
 						}
 					}
 				}
@@ -161,16 +149,22 @@ package game
 		}
 		
 		private function setPlayerLocation(newLoc:Number):void {
+			board.getTile(playerLoc).setOccupied(false);
+			for (var i:Number = 0; i < zombies.length; i++) {
+				var theZombie:Zombie = zombies[i];
+				trace( playerLoc, newLoc, theZombie.getPreviousPosition(), theZombie.getLocation() );
+				if (theZombie.getPreviousPosition() == newLoc && 
+						(theZombie.getLocation() == playerLoc ||
+						theZombie.getLocation() == newLoc ) ) {
+					gameOver = true;
+					trace("Player ran into the zombie, game over");
+					return;
+				}
+			}
 			playerLoc = newLoc;
 			mc_player.x = 90 + 130 * Board.getTileX(newLoc);
 			mc_player.y = 90 + 130 * Board.getTileY(newLoc);
-			for (var i:Number = 0; i < zombies.length; i++) {
-				var theZombie:Zombie = zombies[i];
-				if (theZombie.getLocation() == playerLoc) {
-					gameOver = true;
-					trace("Player ran into the zombie, game over");
-				}
-			}
+			board.getTile(newLoc).setOccupied(true);
 		}
 
 	}

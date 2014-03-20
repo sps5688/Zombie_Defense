@@ -19,6 +19,8 @@ package game
 		private var zombieMoved:Boolean = false;
 		private var pursueOptimal:Boolean = false;
 		private var previousPosition:Number;
+		private var targetX:Number;
+		private var targetY:Number;
 		
 		public function Zombie(location:Number, playerLocation:Number) {
 			//add movieclip to stage
@@ -26,6 +28,8 @@ package game
 			addChild(mc_zombie);
 			this.x = 90 + 130 * Board.getTileX(location);
 			this.y = 90 + 130 * Board.getTileY(location);
+			targetX = x;
+			targetY = y;
 			LayerManager.addToLayer(this, Global.LAYER_ENTITIES);
 			this.location = location;
 			previousPosition = location;
@@ -36,16 +40,42 @@ package game
 			return location;
 		}
 		
+		public function getPreviousPosition():Number {
+			return previousPosition;
+		}
+		
 		public function setLocation(location:Number, board:Board):void {
 			if (!board.getTile(location).isOccupied() || location == playerLocation) {
 				previousPosition = this.location;
 				this.location = location;
-				this.x = 90 + 130 * Board.getTileX(location);
-				this.y = 90 + 130 * Board.getTileY(location);
+				board.getTile(location).setOccupied(true);
+				targetX = 90 + 130 * Board.getTileX(location);
+				targetY = 90 + 130 * Board.getTileY(location);
 			}
 		}
 		
 		public function move(board:Board, playerLocation:Number):Boolean {
+			
+			// If currently in transit, continue transit
+			if ( location != previousPosition ) {
+				var diffx:Number = targetX - x;
+				var diffy:Number = targetY - y;
+				x += diffx == 0 ? 0 : (diffx) / Math.abs(diffx);
+				y += diffy == 0 ? 0 : (diffy) / Math.abs(diffy);
+				
+				// If arrived at destination, unoccupy the previous tile
+				if ( x == targetX && y == targetY ) {
+					board.getTile(previousPosition).setOccupied(false);
+					previousPosition = location;
+				
+					// Check for player death
+					if (location == playerLocation) {
+						trace("MMMM PLAYER, removed zombie");
+						return true;
+					}
+				}
+				return false;
+			}
 			var tileGrid:Array = board.getTileGrid();
 			var curTile:Tile = tileGrid[location];
 			var neighborTile:Tile;
@@ -59,16 +89,6 @@ package game
 				neighborTile = path.shift();
 				trace("Moving zombie " + " from " + curTile.getID() + " to " + neighborTile.getID() + " - there is a path");
 				setLocation(neighborTile.getID(), board);
-				
-				// Update tiles
-				neighborTile.setOccupied(true);
-				curTile.setOccupied(false);
-				
-				// Check for player death
-				if (location == playerLocation) {
-					trace("MMMM PLAYER, removed zombie");
-					return true;
-				}
 			}else {
 				// No path to player, determine optimal tile to move to
 				var optimalDirection:String = getOptimalDirection(board, playerLocation);
@@ -107,11 +127,6 @@ package game
 						if (neighborOpen && currentOpen) {
 							trace("Moving zombie " + " from " + curTile.getID() + " to " + optimalTile.getID() + " - there is not a path");
 							setLocation(optimalTile.getID(), board);
-							
-							// Update tiles
-							optimalTile.setOccupied(true);
-							curTile.setOccupied(false);
-							
 							zombieMoved = true;
 						}else {
 							// Zombie can't move to the optimal tile
