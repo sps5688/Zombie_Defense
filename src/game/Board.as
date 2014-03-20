@@ -1,5 +1,6 @@
 package game 
 {
+	import lib.Coin;
 	import lib.TileClip;
 	import flash.display.MovieClip;
 	import lib.LayerManager;
@@ -15,28 +16,64 @@ package game
 		// Board info
 		private var ROWS:Number = 5;
 		private var COLUMNS:Number = 5;
-		//private var PLAYER_TILE:Number = 12;
 		
 		private var TILE_TYPES:Array = new Array(Tile.T_SHAPE, Tile.L_SHAPE, Tile.STRAIGHT);
 		private var tiles:Array = new Array();
+		private var coins:Array = new Array();
+		private var coinClips:Array = new Array();
 		
-		public function Board() {
-			for (var i:Number = 0; i < ROWS; i++) {
-				for (var j:Number = 0; j < COLUMNS; j++) {
-					var id:Number = i * COLUMNS  + j
-					var tileType:String = (i == 2 && j == 2) ? Tile.CROSS :
-						TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
-					
-					// Create tile and add to array
-					var newTile:Tile = new Tile(id, tileType);
-					tiles.push(newTile);
-					
-					// Add tile to stage
-					LayerManager.addToLayer(newTile, Global.LAYER_BG);
-					newTile.x = 90 + 130 * j;
-					newTile.y = 90 + 130 * i;
+		public function Board(levelNum:Number) {
+			while (coins.length < levelNum) {
+				for (var i:Number = 0; i < ROWS; i++) {
+					for (var j:Number = 0; j < COLUMNS; j++) {
+						var id:Number = i * COLUMNS  + j
+						var tileType:String = (i == 2 && j == 2) ? Tile.CROSS :
+							TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+						
+						// Create tile and add to array
+						var newTile:Tile = new Tile(id, tileType);
+						tiles.push(newTile);
+						
+						// Add tile to stage
+						LayerManager.addToLayer(newTile, Global.LAYER_BG);
+						newTile.x = 90 + 130 * j;
+						newTile.y = 90 + 130 * i;
+					}
+				}
+				
+				// Generate coins
+				while (coins.length > 0 ) coins.pop();
+				while (coinClips.length > 0 ) coinClips.pop();
+				for (var k:Number = 0; k < 100; k++) {
+					var targetTile:Tile = getTile(Math.floor(Math.random() * (ROWS * COLUMNS)));
+					if (targetTile.getType() == "L Shape" || targetTile.getType() == "T Shape") {
+						coins.push(targetTile.getID());
+						var mc_coin:Coin = new Coin();
+						mc_coin.x = 90 + 130 * getTileX(targetTile.getID());
+						mc_coin.y = 90 + 130 * getTileY(targetTile.getID());
+						LayerManager.addToLayer(mc_coin, Global.LAYER_ENTITIES);
+						coinClips.push(mc_coin);
+					}
+					if (coins.length == levelNum) break;
 				}
 			}
+		}
+		
+		public function collectCoin(location:Number):Boolean {
+			for (var i:Number = 0; i < coins.length; i++) {
+				if (coins[i] == location) {
+					coins.splice(i, 1);
+					var thisCoin:Coin = coinClips[i];
+					LayerManager.removeFromLayer(thisCoin, Global.LAYER_ENTITIES);
+					coinClips.splice(i, 1);
+				}
+			}
+			if (coins.length == 0) {
+				// new level
+				trace("LEVEL COMPLETE!");
+				return true;
+			}
+			return false;
 		}
 		
 		public function getTileGrid():Array {
@@ -218,11 +255,6 @@ package game
 			return validMove;
 		}
 		
-		/*
-		public function getPlayerTile():Number {
-			return PLAYER_TILE;
-		}
-		*/
 		public function getTile(index:Number):Tile {
 			return tiles[index];
 		}

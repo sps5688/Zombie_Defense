@@ -10,6 +10,7 @@ package game
 	import flash.events.TimerEvent;
 	import flash.events.KeyboardEvent;
 	import lib.PlayerClip;
+	import lib.Coin;
 	import lib.Global;
 	import lib.EventUtils;
 	import flash.ui.Keyboard;
@@ -29,6 +30,7 @@ package game
 		private var playerLoc:Number;
 		private var playerSpeed:Number;
 		private var mc_player:MovieClip;
+		private var currentLevel:Number = 1;
 		
 		private var enemyMovementTimer:Timer = new Timer(20);
 		private var enemySpawnTimer:Timer = new Timer (15 * 1000);
@@ -76,7 +78,7 @@ package game
 		public function init():void
 		{
 			// init board
-			board = new Board();
+			board = new Board(currentLevel);
 			
 			// init player
 			playerLoc = 12;
@@ -164,7 +166,22 @@ package game
 			playerLoc = newLoc;
 			mc_player.x = 90 + 130 * Board.getTileX(newLoc);
 			mc_player.y = 90 + 130 * Board.getTileY(newLoc);
+			var levelComplete:Boolean = board.collectCoin(newLoc);
 			board.getTile(newLoc).setOccupied(true);
+			
+			if (levelComplete && !gameOver) {
+				nextLevel();
+			}
+		}
+		
+		private function nextLevel():void {
+			LayerManager.removeFromLayer(mc_player, Global.LAYER_ENTITIES);
+			for (var i:Number = 0; i < zombies.length; i++) {
+				LayerManager.removeFromLayer(zombies[i], Global.LAYER_ENTITIES);
+			}
+			zombies = new Array();
+			currentLevel++;
+			init();
 		}
 
 	}
