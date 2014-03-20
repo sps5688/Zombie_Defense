@@ -11,7 +11,7 @@ package
 	 * ...
 	 * @author Brett Slabaugh
 	 */
-	[SWF(backgroundColor="0x000000", width="700", height="700")]
+	[SWF(backgroundColor="0x000000", width="700", height="750")]
 	public class Main extends Sprite 
 	{
 		private var theGame:Gameplay;

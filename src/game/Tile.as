@@ -316,6 +316,7 @@ package game {
 			return containsZombie;
 		}
 		
+		public function getType():String { return type; }
 	}
 
 }
