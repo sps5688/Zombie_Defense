@@ -14,7 +14,7 @@ package game
 	public class Zombie extends MovieClip{
 		private var mc_zombie:ZombieClip;
 		private var location:Number;
-		private var playerLocation:Number;
+		private var player:Player;
 		private var startedDamagingWall:Boolean = false;
 		private var zombieMoved:Boolean = false;
 		private var pursueOptimal:Boolean = false;
@@ -22,7 +22,7 @@ package game
 		private var targetX:Number;
 		private var targetY:Number;
 		
-		public function Zombie(location:Number, playerLocation:Number) {
+		public function Zombie(location:Number, player:Player) {
 			//add movieclip to stage
 			mc_zombie = new ZombieClip();
 			addChild(mc_zombie);
@@ -33,7 +33,7 @@ package game
 			LayerManager.addToLayer(this, Global.LAYER_ENTITIES);
 			this.location = location;
 			previousPosition = location;
-			this.playerLocation = playerLocation;
+			this.player = player;
 		}
 		
 		public function getLocation():Number {
@@ -45,7 +45,8 @@ package game
 		}
 		
 		public function setLocation(location:Number, board:Board):void {
-			if (!board.getTile(location).isOccupied() || location == playerLocation) {
+			if (!board.getTile(location).isOccupied() || location == player.getLocation()
+					|| location == player.getPreviousLocation()) {
 				previousPosition = this.location;
 				this.location = location;
 				board.getTile(location).setOccupied(true);
@@ -54,8 +55,7 @@ package game
 			}
 		}
 		
-		public function move(board:Board, playerLocation:Number):Boolean {
-			
+		public function move(board:Board):Boolean {
 			// If currently in transit, continue transit
 			if ( location != previousPosition ) {
 				var diffx:Number = targetX - x;
@@ -67,12 +67,6 @@ package game
 				if ( x == targetX && y == targetY ) {
 					board.getTile(previousPosition).setOccupied(false);
 					previousPosition = location;
-				
-					// Check for player death
-					if (location == playerLocation) {
-						trace("MMMM PLAYER, removed zombie");
-						return true;
-					}
 				}
 				return false;
 			}
@@ -80,18 +74,18 @@ package game
 			var curTile:Tile = tileGrid[location];
 			var neighborTile:Tile;
 			var neighborTileIndex:Number;
-			this.playerLocation = playerLocation;
 			
 			// Determine if there's a path to the player
-			var path:Array = search(curTile, board);
+			var path:Array = search(curTile, board, player);
 			if (path != null) {
 				// If there is a path, move zombie to next tile
 				neighborTile = path.shift();
+				trace( neighborTile.getID(), path );
 				trace("Moving zombie " + " from " + curTile.getID() + " to " + neighborTile.getID() + " - there is a path");
 				setLocation(neighborTile.getID(), board);
 			}else {
 				// No path to player, determine optimal tile to move to
-				var optimalDirection:String = getOptimalDirection(board, playerLocation);
+				var optimalDirection:String = getOptimalDirection(board, player.getLocation());
 				var optimalTile:Tile;
 				var oppositeDirection:String = board.getOppositeDirection(optimalDirection);
 				
@@ -116,15 +110,9 @@ package game
 					// If there is an open tile to move to
 					if (optimalTile != null) {
 						trace("Optimal move is moving to tile " + optimalTile.getID());
-							
-						// Determine if the zombie can move to the optimal tile
-						var neighborOpen:Boolean = board.isValidMove(optimalDirection, optimalTile);
-						trace("Tile " + curTile.getID() + "'s " + optimalDirection + " is " + neighborOpen);
-						var currentOpen:Boolean = board.isValidMove(oppositeDirection, curTile);
-						trace("Tile " + optimalTile.getID() + "'s " + oppositeDirection + " is " + currentOpen);
 						
 						// If the zombie can move to it, move there
-						if (neighborOpen && currentOpen) {
+						if (board.isValidMove(curTile, optimalTile)) {
 							trace("Moving zombie " + " from " + curTile.getID() + " to " + optimalTile.getID() + " - there is not a path");
 							setLocation(optimalTile.getID(), board);
 							zombieMoved = true;
@@ -176,8 +164,8 @@ package game
 					// Zombie is currently damaging a wall
 					// If the tiles have not rotated, continue to damage wall
 					if (!curTile.hasChanged() && !optimalTile.hasChanged()) {
-						trace("Zombie is damaging " + curTile.getID() + "'s " + optimalDirection + " wall and " +
-						optimalTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
+//						trace("Zombie is damaging " + curTile.getID() + "'s " + optimalDirection + " wall and " +
+//						optimalTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
 						
 						// Damage only if it's not open
 						if (curTile.getWallHealth(optimalDirection) != 0) {
@@ -247,7 +235,7 @@ package game
 			return optimalDirection;
 		}
 		
-		public function search(sourceTile:Tile, board:Board):Array {
+		public function search(sourceTile:Tile, board:Board, player:Player):Array {
 			var tileGrid:Array = board.getTileGrid();
 			
 			// List of visited nodes
@@ -262,13 +250,20 @@ package game
 			// First node doesn't have a parent
 			sourceTile.setPathParent(null);
 			
+			// If player is currently moving toward my tile, intercept
+			if (sourceTile.getID() == player.getLocation()) {
+				var destTile:Tile = board.getTile(player.getPreviousLocation());
+				destTile.setPathParent(sourceTile);
+				return constructPath(destTile);
+			}
+			
 			// Perform BFS
 			while (unvisitedNodes.length != 0) {
 				var curTile:Tile = unvisitedNodes.shift();
 				
-				if (curTile.getID() == playerLocation) {
+				if (curTile.getID() == player.getLocation()) {
 					// Path found
-					return constructPath(tileGrid[playerLocation]);
+					return constructPath(tileGrid[player.getLocation()]);
 				}else {
 					vistedNodes.push(curTile);
 					
@@ -278,8 +273,7 @@ package game
 						var neighborTile:Tile = curTileWalls[i];
 						
 						if (neighborTile != null) {
-							var direction:String = board.getNeighborDirection(curTile, neighborTile);
-							var validMove:Boolean = board.isValidMove(direction, neighborTile);
+							var validMove:Boolean = board.isValidMove(curTile, neighborTile);
 							
 							if (validMove && vistedNodes.indexOf(neighborTile) < 0 &&
 								unvisitedNodes.indexOf(neighborTile) < 0) {
@@ -304,6 +298,10 @@ package game
 			
 			path.reverse();
 			return path;
-		}	
+		}
+		
+		public function foundPlayer( player:MovieClip ):Boolean {
+			return player.hitTestPoint( x, y );
+		}
 	}
 }

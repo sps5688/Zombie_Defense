@@ -9,7 +9,6 @@ package game
 	import flash.events.Event;
 	import flash.events.TimerEvent;
 	import flash.events.KeyboardEvent;
-	import lib.PlayerClip;
 	import lib.Coin;
 	import lib.Global;
 	import lib.EventUtils;
@@ -26,10 +25,8 @@ package game
 		// Storage
 		private var gameOver:Boolean = false;
 		private var zombies:Array = new Array();
+		private var player:Player;
 		private var board:Board;
-		private var playerLoc:Number;
-		private var playerSpeed:Number;
-		private var mc_player:MovieClip;
 		private var currentLevel:Number = 1;
 		
 		private var enemyMovementTimer:Timer = new Timer(20);
@@ -41,12 +38,18 @@ package game
 		}
 		
 		public function moveEnemies(e:Event):void {
-			if (!gameOver){
+			if (!gameOver) {
+				// Move player toward its destination tile
+				player.step( board );
+				if ( board.collectCoin( player.getPreviousLocation() ) ) {
+					nextLevel();
+				}
+				
 				// Move zombies to test path finding with tiles
 				for (var i:Number = 0; i < zombies.length; i++) {
-					var playerFound:Boolean = zombies[i].move(board, playerLoc);
+					var playerFound:Boolean = zombies[i].move(board);
 					
-					if (playerFound) {
+					if (zombies[i].foundPlayer( player )) {
 						zombies.splice(i, 1);
 						trace("Player has died, game over");
 						gameOver = true;
@@ -67,7 +70,7 @@ package game
 				for (var i:Number = 0; i < board.getColumns() * board.getRows(); i++ ) {
 					var theTile:Tile = board.getTile(i);
 					if (!theTile.isOccupied()) {
-						zombies.push(new Zombie(i, playerLoc));
+						zombies.push(new Zombie(i, player));
 						theTile.setOccupied(true);
 						break;
 					}
@@ -81,20 +84,15 @@ package game
 			board = new Board(currentLevel);
 			
 			// init player
-			playerLoc = 12;
-			playerSpeed = 10;
-			mc_player = new PlayerClip();
-			mc_player.x = 90 + 130 * Board.getTileX(playerLoc);
-			mc_player.y = 90 + 130 * Board.getTileY(playerLoc);
-			LayerManager.addToLayer(mc_player, Global.LAYER_ENTITIES);
-			board.getTile(playerLoc).setOccupied(true);
+			player = new Player(12);
+			board.getTile(player.getLocation()).setOccupied(true);
 			
 			// init controls
 			EventUtils.safeAddListener(LayerManager.stage, KeyboardEvent.KEY_DOWN, onKeyDown);
 			
 			// init zombies
 			// For now, need to spawn a zombie in a static location to test pathfinding
-			zombies.push(new Zombie(23, playerLoc));
+			zombies.push(new Zombie(23, player));
 			var tile:Tile = board.getTile(23);
 			tile.setOccupied(true);
 			
@@ -114,49 +112,34 @@ package game
 		private function onKeyDown(e:KeyboardEvent):void {
 			if (!gameOver){
 				var key:uint = e.keyCode;
-				var theTile:Tile = board.getTile(playerLoc);
-				if (key == Keyboard.W || key == Keyboard.UP) {
-					if (board.isValidWall(playerLoc, "north")) { //edge check
-						var northTile:Tile = board.getTile(playerLoc - board.getColumns());
-						if (theTile.getWallHealth("north") <= 0 && northTile.getWallHealth("south") <= 0) { //is there a path
-							setPlayerLocation(playerLoc - board.getColumns());
-						}
-					}
-				}
-				if (key == Keyboard.S || key == Keyboard.DOWN) {
-					if (board.isValidWall(playerLoc, "south")) { //edge check
-						var southTile:Tile = board.getTile(playerLoc + board.getColumns());
-						if (theTile.getWallHealth("south") <= 0 && southTile.getWallHealth("north") <= 0) { //is there a path
-							setPlayerLocation(playerLoc + board.getColumns());
-						}
-					}
-				}
-				if (key == Keyboard.A || key == Keyboard.LEFT) {
-					if (board.isValidWall(playerLoc, "west")) { //edge check
-						var westTile:Tile = board.getTile(playerLoc - 1);
-						if (theTile.getWallHealth("west") <= 0 && westTile.getWallHealth("east") <= 0) { //is there a path
-							setPlayerLocation(playerLoc - 1);
-						}
-					}
-				}
-				if (key == Keyboard.D || key == Keyboard.RIGHT) {
-					if (board.isValidWall(playerLoc, "east")) { //edge check
-						var eastTile:Tile = board.getTile(playerLoc + 1);
-						if (theTile.getWallHealth("east") <= 0 && eastTile.getWallHealth("west") <= 0) { //is there a path
-							setPlayerLocation(playerLoc + 1);
-						}
-					}
+				switch( e.keyCode ) {
+					case Keyboard.W:
+					case Keyboard.UP:
+						player.move( board, Tile.NORTH );
+						break;
+					case Keyboard.S:
+					case Keyboard.DOWN:
+						player.move( board, Tile.SOUTH );
+						break;
+					case Keyboard.A:
+					case Keyboard.LEFT:
+						player.move( board, Tile.WEST );
+						break;
+					case Keyboard.D:
+					case Keyboard.RIGHT:
+						player.move( board, Tile.EAST );
+						break;
 				}
 			}
 		}
-		
+/*		
 		private function setPlayerLocation(newLoc:Number):void {
-			board.getTile(playerLoc).setOccupied(false);
+			board.getTile(player.getLocation()).setOccupied(false);
 			for (var i:Number = 0; i < zombies.length; i++) {
 				var theZombie:Zombie = zombies[i];
-				trace( playerLoc, newLoc, theZombie.getPreviousPosition(), theZombie.getLocation() );
+				trace( player.getLocation(), newLoc, theZombie.getPreviousPosition(), theZombie.getLocation() );
 				if (theZombie.getPreviousPosition() == newLoc && 
-						(theZombie.getLocation() == playerLoc ||
+						(theZombie.getLocation() == player.getLocation() ||
 						theZombie.getLocation() == newLoc ) ) {
 					gameOver = true;
 					trace("Player ran into the zombie, game over");
@@ -173,9 +156,9 @@ package game
 				nextLevel();
 			}
 		}
-		
+*/		
 		private function nextLevel():void {
-			LayerManager.removeFromLayer(mc_player, Global.LAYER_ENTITIES);
+			LayerManager.removeFromLayer(player, Global.LAYER_ENTITIES);
 			for (var i:Number = 0; i < zombies.length; i++) {
 				LayerManager.removeFromLayer(zombies[i], Global.LAYER_ENTITIES);
 			}

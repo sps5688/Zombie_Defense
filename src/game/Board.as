@@ -130,34 +130,30 @@ package game
 		}
 		
 		public function getNeighborTile(curTileID:Number, direction:String):Tile {
-			var neighborTile:Tile;
-			
 			switch(direction) {
-				case "west":
+				case Tile.WEST:
 					if (isValidWall(curTileID, direction)) {
-						neighborTile = tiles[curTileID - 1];
+						return tiles[curTileID - 1];
 					}
 					break;
-				case "east":
+				case Tile.EAST:
 					if (isValidWall(curTileID, direction)) {
-						neighborTile = tiles[curTileID + 1];
+						return tiles[curTileID + 1];
 					}
 					break;
-				case "north":
+				case Tile.NORTH:
 					if (isValidWall(curTileID, direction)) {
-						neighborTile = tiles[curTileID - COLUMNS];
+						return tiles[curTileID - COLUMNS];
 					}
 					break;
-				case "south":
+				case Tile.SOUTH:
 					if (isValidWall(curTileID, direction)) {
-						neighborTile = tiles[curTileID + COLUMNS];
+						return tiles[curTileID + COLUMNS];
 					}
-					break;
-				default:
 					break;
 			}
 			
-			return neighborTile;
+			return null;
 		}
 		
 		public function getOppositeDirection(direction:String):String {
@@ -226,33 +222,10 @@ package game
 			return paths;
 		}
 		
-		public function isValidMove(direction:String, neighborTile:Tile):Boolean {
-			var validMove:Boolean = true;
-			
-			switch(direction) {
-				case "west":
-					if (!neighborTile.getEastWall()) {
-						validMove = false;
-					}
-					break;
-				case "east":
-					if (!neighborTile.getWestWall()) {
-						validMove = false;
-					}
-					break;
-				case "north":
-					if (!neighborTile.getSouthWall()) {
-						validMove = false;
-					}
-					break;
-				case "south":
-					if (!neighborTile.getNorthWall()) {
-						validMove = false;
-					}
-					break;
-			}
-			
-			return validMove;
+		public function isValidMove( origin:Tile, destination:Tile ):Boolean {
+			var dir:String = getNeighborDirection( origin, destination );
+			return dir != null && dir != "" && origin.getWallHealth( dir ) <= 0 && 
+					destination.getWallHealth( getOppositeDirection( dir ) ) <= 0;
 		}
 		
 		public function getTile(index:Number):Tile {
