@@ -48,6 +48,7 @@ package game {
 				
 				// If arrived at destination, unoccupy the previous tile
 				if ( x == targetX && y == targetY ) {
+					mc_player.gotoAndStop( "Idle" );
 					board.getTile( prevLocation ).setOccupied( false );
 					prevLocation = location;
 				}
@@ -58,17 +59,24 @@ package game {
 			if ( location != prevLocation ) {
 				return false;
 			}
+			mc_player.rotationZ = dir == Tile.EAST ? 90 :
+					dir == Tile.SOUTH ? 180 :
+					dir == Tile.WEST ? 270 : 0;
 			var origin:Tile = board.getTile( location );
 			var destination:Tile = board.getNeighborTile( location, dir );
 			if( destination != null && board.isValidMove( origin, destination ) ) {
-				//TODO move there
 				location = destination.getID();
 				destination.setOccupied( true );
 				targetX = 90 + 130 * Board.getTileX(location);
 				targetY = 90 + 130 * Board.getTileY(location);
+				mc_player.gotoAndPlay( "Walk" );
 				return true;
 			}
 			return false;
+		}
+		
+		public function die():void {
+			mc_player.stop();
 		}
 		
 	} // class Player

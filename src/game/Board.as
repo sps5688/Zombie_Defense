@@ -51,6 +51,8 @@ package game
 						var mc_coin:Coin = new Coin();
 						mc_coin.x = 90 + 130 * getTileX(targetTile.getID());
 						mc_coin.y = 90 + 130 * getTileY(targetTile.getID());
+						mc_coin.scaleX = 0.5;
+						mc_coin.scaleY = 0.5;
 						LayerManager.addToLayer(mc_coin, Global.LAYER_ENTITIES);
 						coinClips.push(mc_coin);
 					}

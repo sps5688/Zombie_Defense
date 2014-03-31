@@ -5,7 +5,6 @@ package game {
 	import lib.TileClipL;
 	import lib.TileClipStraight;
 	import lib.TileClipT;
-	import lib.TileClipPlayer;
 	import flash.display.MovieClip;
 	import flash.events.MouseEvent;
 	
@@ -22,7 +21,6 @@ package game {
 		public static const L_SHAPE:String = "L Shape";
 		public static const T_SHAPE:String = "T Shape";
 		public static const CROSS:String = "Cross";
-		public static const PLAYER:String = "Player";
 		
 		// spacing constants
 		public static const MARGIN:int = 25;
@@ -99,13 +97,6 @@ package game {
 					healthSouth = 0;
 					healthWest = 0;
 					break;
-				case PLAYER:
-					mc_tile = new TileClipPlayer();
-					healthNorth = 0;
-					healthEast = 0;
-					healthSouth = 0;
-					healthWest = 0;
-					break;
 			}
 			setOrientation(Math.floor(Math.random() * 4));
 			addChild(mc_tile);
@@ -131,7 +122,6 @@ package game {
 
 		private function rotateLeft(e:MouseEvent):void {
 			if (!containsZombie) {
-				if ( type == PLAYER ) return;
 				mc_tile.gotoAndPlay("left" + orientation);
 				orientation = (orientation + 3) % 4;
 				
@@ -149,7 +139,6 @@ package game {
 
 		private function rotateRight(e:MouseEvent):void {
 			if (!containsZombie) {
-				if ( type == PLAYER ) return;
 				mc_tile.gotoAndPlay("right" + orientation);
 				orientation = (orientation + 1) % 4;
 			
@@ -167,7 +156,6 @@ package game {
 		}
 		
 		private function setOrientation(o:int):void {
-			if ( type == PLAYER ) return;
 			mc_tile.gotoAndStop("right" + o); // "right" is arbitrary
 			var dirs:Array = new Array(healthNorth, healthEast, healthSouth, healthWest );
 			var diff:int = 4 + orientation - o;

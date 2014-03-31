@@ -50,8 +50,13 @@ package game
 					var playerFound:Boolean = zombies[i].move(board);
 					
 					if (zombies[i].foundPlayer( player )) {
+						zombies[i].braaaaaiiinzzzzz();
 						zombies.splice(i, 1);
 						trace("Player has died, game over");
+						player.die();
+						for ( var j:Number = 0; j < zombies.length; j++) {
+							zombies[j].die();
+						}
 						gameOver = true;
 						if ( DEBUG ) {
 							LayerManager.stage.removeEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);

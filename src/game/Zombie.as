@@ -52,6 +52,7 @@ package game
 				board.getTile(location).setOccupied(true);
 				targetX = 90 + 130 * Board.getTileX(location);
 				targetY = 90 + 130 * Board.getTileY(location);
+				mc_zombie.gotoAndPlay( "Walk" );
 			}
 		}
 		
@@ -65,6 +66,7 @@ package game
 				
 				// If arrived at destination, unoccupy the previous tile
 				if ( x == targetX && y == targetY ) {
+					mc_zombie.gotoAndStop( "Idle" );
 					board.getTile(previousPosition).setOccupied(false);
 					previousPosition = location;
 				}
@@ -82,6 +84,10 @@ package game
 				neighborTile = path.shift();
 				trace( neighborTile.getID(), path );
 				trace("Moving zombie " + " from " + curTile.getID() + " to " + neighborTile.getID() + " - there is a path");
+				var dir:String = board.getNeighborDirection( curTile, neighborTile );
+				mc_zombie.rotationZ = dir == Tile.EAST ? 90 :
+						dir == Tile.SOUTH ? 180 :
+						dir == Tile.WEST ? 270 : 0;
 				setLocation(neighborTile.getID(), board);
 			}else {
 				// No path to player, determine optimal tile to move to
@@ -114,6 +120,9 @@ package game
 						// If the zombie can move to it, move there
 						if (board.isValidMove(curTile, optimalTile)) {
 							trace("Moving zombie " + " from " + curTile.getID() + " to " + optimalTile.getID() + " - there is not a path");
+							mc_zombie.rotationZ = optimalDirection == Tile.EAST ? 90 :
+									optimalDirection == Tile.SOUTH ? 180 :
+									optimalDirection == Tile.WEST ? 270 : 0;
 							setLocation(optimalTile.getID(), board);
 							zombieMoved = true;
 						}else {
@@ -146,7 +155,10 @@ package game
 								if (optimalTile.getWallHealth(oppositeDirection) != 0) {
 									optimalTile.damageWall(oppositeDirection);
 								}
-									
+								mc_zombie.rotationZ = optimalDirection == Tile.EAST ? 90 :
+										optimalDirection == Tile.SOUTH ? 180 :
+										optimalDirection == Tile.WEST ? 270 : 0;
+								mc_zombie.gotoAndPlay( "Hit" );
 								startedDamagingWall = true;
 							}else {
 								// If one of the tiles has rotated, reset and rethink
@@ -155,7 +167,7 @@ package game
 								}else if (optimalTile.hasChanged()) {
 									optimalTile.reset();
 								}
-								
+								mc_zombie.stop();
 								startedDamagingWall = false;
 							}
 						}
@@ -189,7 +201,7 @@ package game
 						}else if (optimalTile.hasChanged()) {
 							optimalTile.reset();
 						}
-						
+						mc_zombie.stop();
 						startedDamagingWall = false;
 					}
 				}
@@ -347,6 +359,14 @@ package game
 		
 		public function foundPlayer( player:MovieClip ):Boolean {
 			return player.hitTestPoint( x, y );
+		}
+		
+		public function die():void {
+			mc_zombie.stop();
+		}
+		
+		public function braaaaaiiinzzzzz():void {
+			mc_zombie.gotoAndPlay( "Hit" );
 		}
 	}
 }
