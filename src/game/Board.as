@@ -156,6 +156,40 @@ package game
 			return null;
 		}
 		
+		public function getNeighorTiles(location:Number):Array {
+			var neighbors:Array = new Array();
+			
+			// West
+			if (location - 1 % COLUMNS != 0) {
+				neighbors.push(tiles[location - 1]);
+			}else {
+				neighbors.push(null);
+			}
+			
+			// East
+			if (location + 1 % COLUMNS != COLUMNS - 1) {
+				neighbors.push(tiles[location + 1]);
+			}else {
+				neighbors.push(null);
+			}
+			
+			// North
+			if (location - COLUMNS >= COLUMNS) {
+				neighbors.push(tiles[location - COLUMNS]);
+			}else {
+				neighbors.push(null);
+			}
+			
+			// South
+			if (location + COLUMNS < ((COLUMNS * ROWS) - COLUMNS)) {
+				neighbors.push(tiles[location + COLUMNS]);
+			}else {
+				neighbors.push(null);
+			}
+			
+			return neighbors;
+		}
+		
 		public function getOppositeDirection(direction:String):String {
 			var oppositeDirection:String = "";
 			

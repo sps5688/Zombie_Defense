@@ -86,13 +86,13 @@ package game
 			}else {
 				// No path to player, determine optimal tile to move to
 				var optimalDirection:String = getOptimalDirection(board, player.getLocation());
-				var optimalTile:Tile;
 				var oppositeDirection:String = board.getOppositeDirection(optimalDirection);
+				var optimalTile:Tile;
 				
 				// Determine optimal direction to go
 				switch(optimalDirection) {
 					case "west":
-						optimalTile = board.getNeighborTile(location, "west")
+						optimalTile = board.getNeighborTile(location, "west");
 						break;
 					case "east":
 						optimalTile = board.getNeighborTile(location, "east");
@@ -164,8 +164,8 @@ package game
 					// Zombie is currently damaging a wall
 					// If the tiles have not rotated, continue to damage wall
 					if (!curTile.hasChanged() && !optimalTile.hasChanged()) {
-//						trace("Zombie is damaging " + curTile.getID() + "'s " + optimalDirection + " wall and " +
-//						optimalTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
+						//trace("Zombie is damaging " + curTile.getID() + "'s " + optimalDirection + " wall and " +
+						//optimalTile.getID() + "'s " + oppositeDirection + "'s wall - there is not a path");
 						
 						// Damage only if it's not open
 						if (curTile.getWallHealth(optimalDirection) != 0) {
@@ -206,26 +206,71 @@ package game
 			var westDist:Number = Math.abs(destination - (location - 1));
 			var northDist:Number = Math.abs(destination - (location - board.getColumns()));
 			var southDist:Number = Math.abs(destination - (location + board.getColumns()));
-
-			if (eastDist < minDistance && board.isValidWall(location, "east")) {
+			
+			var east_west:int = (destination % board.getColumns()) - (location % board.getColumns());
+			var north_south:int = (destination / board.getColumns()) - (location % board.getColumns());
+			
+			// Count number of closed walls on each tile
+			var possibleMoves:Array = board.getNeighorTiles(location); // Null are borders
+			var minClosedWalls:Number = 100;
+			for (var i:Number = 0; i < possibleMoves.length; i++) {
+				// Current neighbor tile
+				var tile:Tile = possibleMoves[i];
+				
+				// If current tile is not a border tile
+				if (tile != null) {
+					// Get it's open walls
+					var openWalls:Array = board.getOpenWalls(tile);
+					
+					// Count number of closed walls
+					var closedWallCounter:Number = 0;
+					for (var j:Number = 0; j < openWalls.length; j++) {
+						if (openWalls[j] == null) {
+							closedWallCounter++;
+						}
+					}
+					
+					// Increase the distance for each closed wall
+					switch(i) {
+						case 0:
+							//trace("Increasing east by " + closedWallCounter);
+							eastDist += closedWallCounter;
+							break;
+						case 1:
+							//trace("Increasing west by " + closedWallCounter);
+							westDist += closedWallCounter;
+							break;
+						case 2:
+							//trace("Increasing north by " + closedWallCounter);
+							northDist += closedWallCounter;
+							break;
+						case 3:
+							//trace("Increasing south by " + closedWallCounter);
+							southDist += closedWallCounter;
+							break;
+					}
+				}
+			}
+			
+			if (eastDist < minDistance && board.isValidWall(location, "east") && east_west > 0) {
 				// East
 				minDistance = eastDist;
 				optimalDirection = "east";
 			}
 						
-			if (westDist < minDistance && board.isValidWall(location, "west")) {
+			if (westDist < minDistance && board.isValidWall(location, "west") && east_west <= 0) {
 				// West
 				minDistance = westDist;
 				optimalDirection = "west";
 			}
 			
-			if (northDist < minDistance && board.isValidWall(location, "north")) {
+			if (northDist < minDistance && board.isValidWall(location, "north") && north_south > 0) {
 				// North
 				minDistance = northDist;
 				optimalDirection = "north";
 			}
 			
-			if (southDist < minDistance && board.isValidWall(location, "south")) {
+			if (southDist < minDistance && board.isValidWall(location, "south") && north_south <= 0) {
 				// South
 				minDistance = southDist
 				optimalDirection = "south";
