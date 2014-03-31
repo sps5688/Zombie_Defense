@@ -34,7 +34,6 @@ package game
 		
 		public function Gameplay() 
 		{
-			zombies = new Array();
 		}
 		
 		public function moveEnemies(e:Event):void {
@@ -50,13 +49,13 @@ package game
 					var playerFound:Boolean = zombies[i].move(board);
 					
 					if (zombies[i].foundPlayer( player )) {
-						zombies[i].braaaaaiiinzzzzz();
-						zombies.splice(i, 1);
+//						zombies.splice(i, 1);
 						trace("Player has died, game over");
 						player.die();
 						for ( var j:Number = 0; j < zombies.length; j++) {
 							zombies[j].die();
 						}
+						zombies[i].braaaaaiiinzzzzz();
 						gameOver = true;
 						if ( DEBUG ) {
 							LayerManager.stage.removeEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
@@ -97,19 +96,20 @@ package game
 			
 			// init zombies
 			// For now, need to spawn a zombie in a static location to test pathfinding
+			zombies = new Array();
 			zombies.push(new Zombie(23, player));
 			var tile:Tile = board.getTile(23);
 			tile.setOccupied(true);
 			
 			// init zombie spawner
-			enemySpawnTimer.addEventListener(TimerEvent.TIMER, spawnEnemies);
+			EventUtils.safeAddListener( enemySpawnTimer, TimerEvent.TIMER, spawnEnemies );
 			enemySpawnTimer.start();
 			
 			// Move enemies
-			if( DEBUG ) {
-				LayerManager.stage.addEventListener(KeyboardEvent.KEY_DOWN, moveEnemies);
+			if ( DEBUG ) {
+				EventUtils.safeAddListener( LayerManager.stage, KeyboardEvent.KEY_DOWN, moveEnemies );
 			} else {
-				enemyMovementTimer.addEventListener(TimerEvent.TIMER, moveEnemies);
+				EventUtils.safeAddListener( enemyMovementTimer, TimerEvent.TIMER, moveEnemies );
 				enemyMovementTimer.start();
 			}
 		}
@@ -137,36 +137,12 @@ package game
 				}
 			}
 		}
-/*		
-		private function setPlayerLocation(newLoc:Number):void {
-			board.getTile(player.getLocation()).setOccupied(false);
-			for (var i:Number = 0; i < zombies.length; i++) {
-				var theZombie:Zombie = zombies[i];
-				trace( player.getLocation(), newLoc, theZombie.getPreviousPosition(), theZombie.getLocation() );
-				if (theZombie.getPreviousPosition() == newLoc && 
-						(theZombie.getLocation() == player.getLocation() ||
-						theZombie.getLocation() == newLoc ) ) {
-					gameOver = true;
-					trace("Player ran into the zombie, game over");
-					return;
-				}
-			}
-			playerLoc = newLoc;
-			mc_player.x = 90 + 130 * Board.getTileX(newLoc);
-			mc_player.y = 90 + 130 * Board.getTileY(newLoc);
-			var levelComplete:Boolean = board.collectCoin(newLoc);
-			board.getTile(newLoc).setOccupied(true);
-			
-			if (levelComplete && !gameOver) {
-				nextLevel();
-			}
-		}
-*/		
+		
 		private function nextLevel():void {
-			LayerManager.removeFromLayer(player, Global.LAYER_ENTITIES);
-			for (var i:Number = 0; i < zombies.length; i++) {
-				LayerManager.removeFromLayer(zombies[i], Global.LAYER_ENTITIES);
-			}
+			LayerManager.clearLayer( Global.LAYER_ENTITIES );
+			LayerManager.clearLayer( Global.LAYER_BG );
+			enemySpawnTimer.stop();
+			enemyMovementTimer.stop();
 			zombies = new Array();
 			currentLevel++;
 			init();

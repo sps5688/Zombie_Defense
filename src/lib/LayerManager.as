@@ -76,6 +76,21 @@ package lib
 				objectToRemove.parent.removeChild(objectToRemove);
 			}
 		}
+		
+		public static function clearLayer( layer:String ):void
+		{
+			if (m_layerDictionary)
+			{
+				if (m_layerDictionary[layer])
+				{
+					m_layerDictionary[layer].removeChildren();
+				}else {
+					trace("Layer doesn't exist");
+				}
+			}else {
+				trace("Initialize Layermanager");
+			}
+		}
 	}
 
 }
