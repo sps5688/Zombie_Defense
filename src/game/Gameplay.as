@@ -71,14 +71,13 @@ package game
 		
 		private function spawnEnemies(e:TimerEvent):void {
 			if (!gameOver) {
-				for (var i:Number = 0; i < board.getColumns() * board.getRows(); i++ ) {
-					var theTile:Tile = board.getTile(i);
-					if (!theTile.isOccupied()) {
-						zombies.push(new Zombie(i, player));
-						theTile.setOccupied(true);
-						break;
-					}
+				var edgeTiles:Array = [ 0, 1, 2, 3, 4, 5, 9, 10, 14, 15, 19, 20, 24 ];
+				var tileToSpawnIn = edgeTiles[Math.floor(Math.random() * 13)];
+				while (board.getTile(tileToSpawnIn).isOccupied()) {
+					tileToSpawnIn = edgeTiles[Math.floor(Math.random() * 13)];
 				}
+				zombies.push(new Zombie(tileToSpawnIn, player));
+				board.getTile(tileToSpawnIn).setOccupied(true);
 			}
 		}
 		
