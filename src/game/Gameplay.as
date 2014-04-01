@@ -138,6 +138,13 @@ package game
 						nextLevel();
 						break;
 				}
+			} else {
+				if (e.keyCode == Keyboard.R)
+				{
+					gameOver = false;
+					currentLevel = 0;
+					nextLevel();
+				}
 			}
 		}
 		
