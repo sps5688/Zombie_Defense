@@ -72,7 +72,7 @@ package game
 		private function spawnEnemies(e:TimerEvent):void {
 			if (!gameOver) {
 				var edgeTiles:Array = [ 0, 1, 2, 3, 4, 5, 9, 10, 14, 15, 19, 20, 24 ];
-				var tileToSpawnIn = edgeTiles[Math.floor(Math.random() * 13)];
+				var tileToSpawnIn:Number = edgeTiles[Math.floor(Math.random() * 13)];
 				while (board.getTile(tileToSpawnIn).isOccupied()) {
 					tileToSpawnIn = edgeTiles[Math.floor(Math.random() * 13)];
 				}
@@ -132,6 +132,10 @@ package game
 					case Keyboard.D:
 					case Keyboard.RIGHT:
 						player.move( board, Tile.EAST );
+						break;
+					case Keyboard.R:
+						currentLevel = 0;
+						nextLevel();
 						break;
 				}
 			}
